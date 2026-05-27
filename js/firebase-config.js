@@ -1,28 +1,16 @@
-// Paste your Firebase web config object here after creating a project at
-// https://console.firebase.google.com — pick "Add app → Web (</>)" to copy it.
+// Firebase web config for the training-log project.
 //
-// Until you fill this in, the app runs in localStorage-only mode (still
-// fully usable on one device — just no cross-device sync).
-//
-// Setup steps (see README for screenshots):
-//   1. Create Firebase project. No Google Analytics needed.
-//   2. Build → Firestore Database → Create database → Start in production mode.
-//   3. Firestore → Rules tab → paste:
-//        rules_version = '2';
-//        service cloud.firestore {
-//          match /databases/{database}/documents {
-//            match /{document=**} { allow read, write: if true; }
-//          }
-//        }
-//   4. Project settings ⚙ → "Your apps" → register a Web app → copy the config object below.
+// Safe to commit: the apiKey is identifies the Firebase project, not a secret —
+// Firestore rules are what gate access (currently wide-open by design for this
+// single-user personal log). See README "Firebase setup" for details.
 
 export const FIREBASE_CONFIG = {
-  // apiKey: "AIza...",
-  // authDomain: "your-project.firebaseapp.com",
-  // projectId: "your-project",
-  // storageBucket: "your-project.appspot.com",
-  // messagingSenderId: "...",
-  // appId: "1:...:web:...",
+  apiKey: "AIzaSyB-4JUhYxAkzWRSDfxIUxQSdaA_el7g84k",
+  authDomain: "training-log-225de.firebaseapp.com",
+  projectId: "training-log-225de",
+  storageBucket: "training-log-225de.firebasestorage.app",
+  messagingSenderId: "456070794822",
+  appId: "1:456070794822:web:b8a2f8c2c16e0519ec8447",
 };
 
 export const isFirebaseConfigured = () => !!FIREBASE_CONFIG.projectId;
