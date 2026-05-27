@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup B — Two-column split prescription/input</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --card: #161a22;
+    --ink: #e8eaed;
+    --muted: #8a93a3;
+    --line: #262b36;
+    --accent: #ffb454;
+    --accent-soft: #2a2218;
+    --ok: #4caf50;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 18px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; flex: 1; min-width: 200px; }
+  header .meta { color: var(--muted); font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .pill.active { background: var(--accent); color: #1a1500; border-color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 14px; padding-bottom: 80px; }
+  .exercise { display: grid; grid-template-columns: 1fr; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  @media (min-width: 760px) {
+    .exercise { grid-template-columns: 280px 1fr; }
+    .rx-col { border-right: 1px solid var(--line); }
+  }
+  .rx-col { padding: 14px 16px; background: linear-gradient(180deg, rgba(255,180,84,0.06), transparent 60%); }
+  .rx-col .order { color: var(--accent); font-weight: 700; letter-spacing: 0.04em; font-size: 13px; }
+  .rx-col .name { font-size: 16px; font-weight: 600; margin: 2px 0 6px; }
+  .rx-col .video { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .rx-col .video:hover { text-decoration: underline; }
+  .rx-grid { margin-top: 12px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+  .rx-grid dt { color: var(--muted); }
+  .rx-grid dd { margin: 0; font-weight: 600; }
+  .rx-col details { margin-top: 10px; }
+  .rx-col details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .input-col { padding: 14px 16px; }
+  .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .controls button { font: inherit; font-size: 13px; padding: 6px 11px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 6px; cursor: pointer; }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  table.sets { width: 100%; border-collapse: collapse; }
+  table.sets th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 6px; border-bottom: 1px solid var(--line); }
+  table.sets td { padding: 6px 6px; vertical-align: middle; }
+  table.sets td:first-child { width: 36px; color: var(--muted); font-size: 12px; text-align: center; }
+  table.sets input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 5px; font: inherit; font-size: 14px; }
+  table.sets input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .checkbox-block { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-block label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  .checkbox-block input { width: 22px; height: 22px; accent-color: var(--ok); }
+  .checkbox-block label.done { background: rgba(76,175,80,0.08); border-color: rgba(76,175,80,0.4); }
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px; display: flex; gap: 8px; justify-content: center; }
+  footer button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  footer button.primary { background: var(--accent); color: #1a1500; border-color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mobility · Pike &amp; H2T</h1>
+  <span class="meta">Phase 1 · Day 3 of 8</span>
+  <button class="pill active">Phase 1</button>
+  <button class="pill">Day 3</button>
+  <button class="pill">⏱</button>
+  <button class="pill">♩</button>
+  <button class="pill">📖 Tips</button>
+</header>
+<main>
+
+<!-- A1: Rolling Feet (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">A1</div>
+    <div class="name">Rolling Feet</div>
+    <a class="video" href="https://link.matthewismith.com/rolling-feet" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Time</dt><dd>90s per side</dd>
+      <dt>Sets</dt><dd>1</dd>
+      <dt>Rest</dt><dd>as needed</dd>
+    </dl>
+    <details><summary>Notes</summary><div style="margin-top:6px;color:var(--muted);font-size:12px">Warm-up exercise. Both feet, slow pressure.</div></details>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Left foot — 90s</label>
+      <label class="done"><input type="checkbox" checked> Right foot — 90s</label>
+    </div>
+  </div>
+</section>
+
+<!-- A2: Calf Stretch (reps/measurement) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">A2 / B1</div>
+    <div class="name">Calf Stretch — Single Leg Standing</div>
+    <a class="video" href="https://link.matthewismith.com/calfstretch-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>8</dd>
+      <dt>Tempo</dt><dd>—</dd>
+      <dt>Sets</dt><dd>1–2</dd>
+      <dt>Rest</dt><dd>as needed</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls">
+      <button>⏱ Rest</button>
+      <button>♩ Metronome</button>
+      <button>+ Set</button>
+    </div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Reps</th><th>Weight</th><th>Depth</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><input type="number" value="8"></td><td><input type="number" placeholder="lb"></td><td><input type="text" placeholder="toes touch"></td></tr>
+        <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- C1: Sciatic Nerve Ankle Joint Floss (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">C1</div>
+    <div class="name">Sciatic Nerve — Ankle Joint Floss</div>
+    <a class="video" href="https://link.matthewismith.com/sciatic-ankle-floss" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>8</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Set 1 — 8 reps</label>
+      <label><input type="checkbox"> Set 2 — 8 reps</label>
+      <label><input type="checkbox"> Set 3 — 8 reps (optional)</label>
+    </div>
+  </div>
+</section>
+
+<!-- D1: Pike Block Crush Leg Elevated (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">D1</div>
+    <div class="name">Pike Block Crush — Leg Elevated</div>
+    <a class="video" href="https://link.matthewismith.com/leg-elevated-pike-block-crush" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>5</dd>
+      <dt>Tempo</dt><dd>3s up / 3s down</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Set 1</label>
+      <label><input type="checkbox"> Set 2</label>
+      <label><input type="checkbox"> Set 3 (optional)</label>
+    </div>
+  </div>
+</section>
+
+<!-- Pike Hang -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">—</div>
+    <div class="name">Pike Hang — Leg Elevated</div>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Hold</dt><dd>10s</dd>
+      <dt>Sets</dt><dd>1</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button></div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Hold (s)</th><th>Weight</th><th>Angle (°)</th></tr></thead>
+      <tbody><tr><td>1</td><td><input type="number" value="10"></td><td><input type="number"></td><td><input type="number"></td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Standing B-Stance -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">—</div>
+    <div class="name">Standing B-Stance</div>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Tempo</dt><dd>Contract 5s · Relax 5s</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button><button>+ Set</button></div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Cycles</th><th>Weight</th><th>Depth</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+        <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+<footer>
+  <button>Export CSV</button>
+  <button class="primary">Save session</button>
+</footer>
+</body>
+</html>

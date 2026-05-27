@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup A — Row-per-exercise inline prescription</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #e3e3df;
+    --accent: #2b6cb0;
+    --accent-soft: #e8f0fa;
+    --ok: #2f855a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; }
+  header .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  header .tools { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font-size: 13px; cursor: pointer; }
+  .pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .pill.ghost { background: transparent; }
+  main { padding: 12px 12px 80px; max-width: 720px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .ex-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .order { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; min-width: 26px; }
+  .name { font-weight: 600; }
+  .video { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .video:hover { text-decoration: underline; }
+  .rx { color: var(--muted); font-size: 13px; margin: 6px 0 10px; padding: 6px 8px; background: var(--accent-soft); border-radius: 6px; }
+  .rx b { color: var(--ink); font-weight: 600; }
+  .controls { display: flex; gap: 6px; margin-bottom: 8px; }
+  .controls button { font: inherit; font-size: 12px; padding: 4px 9px; border: 1px solid var(--line); background: white; border-radius: 6px; cursor: pointer; }
+  .controls button:hover { background: var(--accent-soft); }
+  table.sets { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.sets th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  table.sets td { padding: 4px 6px; }
+  table.sets td:first-child { width: 38px; color: var(--muted); font-size: 12px; }
+  table.sets input[type=number], table.sets input[type=text] { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 14px; }
+  table.sets input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .check-row input { width: 22px; height: 22px; accent-color: var(--ok); }
+  .check-row label { font-size: 14px; }
+  .timer-pop { display: none; margin-top: 8px; padding: 8px; background: #fffceb; border: 1px solid #f0e6a8; border-radius: 6px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .timer-pop.on { display: block; }
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px; display: flex; gap: 8px; justify-content: center; }
+  footer button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: white; cursor: pointer; }
+  footer button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  @media (min-width: 600px) {
+    table.sets td:first-child { width: 50px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mobility · Pike &amp; H2T — Phase 1, Day 3</h1>
+  <div class="sub">Sample mockup A · prescription chip above each input grid</div>
+  <div class="tools">
+    <span class="pill active">Phase 1</span>
+    <span class="pill ghost">Day 3</span>
+    <span class="pill ghost">⏱ Rest timer</span>
+    <span class="pill ghost">♩ Metronome 60</span>
+    <a class="pill ghost" href="#cheat" style="text-decoration:none;color:inherit">📖 Warmup &amp; tips</a>
+  </div>
+</header>
+<main>
+
+<!-- A1: Rolling Feet (check) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">A1</span>
+    <span class="name">Rolling Feet</span>
+    <a class="video" href="https://link.matthewismith.com/rolling-feet" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>90s per side</b> · <b>1 set</b> · rest as needed</div>
+  <div class="check-row">
+    <input type="checkbox" id="a1c">
+    <label for="a1c">Completed both sides</label>
+  </div>
+</div>
+
+<!-- A2/B1: Calf Stretch Single Leg Standing (reps/measurement) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">A2</span>
+    <span class="name">Calf Stretch — Single Leg Standing</span>
+    <a class="video" href="https://link.matthewismith.com/calfstretch-standing" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>8 reps</b> · <b>1–2 sets</b> · rest as needed</div>
+  <div class="controls">
+    <button onclick="document.getElementById('t-a2').classList.toggle('on')">⏱ Rest</button>
+    <button>♩ Metronome</button>
+  </div>
+  <div id="t-a2" class="timer-pop">Resting · 00:42 remaining (tap to stop)</div>
+  <table class="sets">
+    <thead><tr><th>Set</th><th>Reps</th><th>Weight</th><th>Measurement (depth)</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><input type="number" placeholder="8"></td><td><input type="number" placeholder="lb"></td><td><input type="text" placeholder="toes touch"></td></tr>
+      <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- C1: Sciatic Nerve Ankle Joint Floss (check) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">C1</span>
+    <span class="name">Sciatic Nerve — Ankle Joint Floss</span>
+    <a class="video" href="https://link.matthewismith.com/sciatic-ankle-floss" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>8 reps</b> · <b>2–3 sets</b> · rest 60s+</div>
+  <div class="check-row"><input type="checkbox" id="c1a"><label for="c1a">Set 1</label></div>
+  <div class="check-row"><input type="checkbox" id="c1b"><label for="c1b">Set 2</label></div>
+  <div class="check-row"><input type="checkbox" id="c1c"><label for="c1c">Set 3</label></div>
+</div>
+
+<!-- D1: Pike Block Crush Leg Elevated (check) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">D1</span>
+    <span class="name">Pike Block Crush — Leg Elevated</span>
+    <a class="video" href="https://link.matthewismith.com/leg-elevated-pike-block-crush" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>5 reps</b> · <b>3s up / 3s down</b> · <b>2–3 sets</b> · rest 60s+</div>
+  <div class="check-row"><input type="checkbox" id="d1a"><label for="d1a">Set 1</label></div>
+  <div class="check-row"><input type="checkbox" id="d1b"><label for="d1b">Set 2</label></div>
+  <div class="check-row"><input type="checkbox" id="d1c"><label for="d1c">Set 3</label></div>
+</div>
+
+<!-- Pike Hang (reps/measurement) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">—</span>
+    <span class="name">Pike Hang — Leg Elevated</span>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>10s hold</b> · <b>1 set</b> · rest 60s+</div>
+  <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button></div>
+  <table class="sets">
+    <thead><tr><th>Set</th><th>Hold (s)</th><th>Weight</th><th>Measurement (° angle)</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><input type="number" placeholder="10"></td><td><input type="number"></td><td><input type="number" placeholder="deg"></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Standing B-Stance (reps/measurement) -->
+<div class="card">
+  <div class="ex-head">
+    <span class="order">—</span>
+    <span class="name">Standing B-Stance</span>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ video</a>
+  </div>
+  <div class="rx"><b>Contract 5s · Relax 5s</b> · <b>2–3 sets</b> · rest 60s+</div>
+  <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button></div>
+  <table class="sets">
+    <thead><tr><th>Set</th><th>Cycles</th><th>Weight</th><th>Measurement (depth)</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+      <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+    </tbody>
+  </table>
+</div>
+
+</main>
+<footer>
+  <button>Export CSV</button>
+  <button class="primary">Save session</button>
+</footer>
+</body>
+</html>
