@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup D — Dark, mobile B / desktop C</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --card: #161a22;
+    --card-2: #1c212c;
+    --ink: #e8eaed;
+    --muted: #8a93a3;
+    --line: #262b36;
+    --accent: #ffb454;
+    --accent-soft: #2a2218;
+    --today: #2f2410;
+    --readonly: #14171d;
+    --ok: #4caf50;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 14px 18px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; flex: 1; min-width: 200px; }
+  header .meta { color: var(--muted); font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .pill.active { background: var(--accent); color: #1a1500; border-color: var(--accent); }
+  main { max-width: 1500px; margin: 0 auto; padding: 14px; padding-bottom: 80px; }
+
+  /* Day switcher: only used on mobile */
+  .day-switch { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .day-switch button { font: inherit; font-size: 13px; width: 38px; height: 38px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 6px; cursor: pointer; }
+  .day-switch button.today { background: var(--accent); color: #1a1500; border-color: var(--accent); font-weight: 700; }
+  .day-switch button.done { background: var(--readonly); color: var(--muted); }
+
+  /* ===== MOBILE LAYOUT (mockup B style — two-column-on-card, single day) ===== */
+  .mobile-view { display: block; }
+  .desktop-view { display: none; }
+
+  .exercise { display: grid; grid-template-columns: 1fr; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .rx-col { padding: 14px 16px; background: linear-gradient(180deg, rgba(255,180,84,0.06), transparent 60%); }
+  .rx-col .order { color: var(--accent); font-weight: 700; letter-spacing: 0.04em; font-size: 13px; }
+  .rx-col .name { font-size: 16px; font-weight: 600; margin: 2px 0 6px; }
+  .rx-col .video { text-decoration: none; font-size: 13px; }
+  .rx-col .video:hover { text-decoration: underline; }
+  .rx-grid { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+  .rx-grid dt { color: var(--muted); }
+  .rx-grid dd { margin: 0; font-weight: 600; }
+  .input-col { padding: 14px 16px; }
+  .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .controls button { font: inherit; font-size: 13px; padding: 6px 11px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 6px; cursor: pointer; }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  table.sets { width: 100%; border-collapse: collapse; }
+  table.sets th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 6px; border-bottom: 1px solid var(--line); }
+  table.sets td { padding: 6px 6px; vertical-align: middle; }
+  table.sets td:first-child { width: 36px; color: var(--muted); font-size: 12px; text-align: center; }
+  table.sets input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 5px; font: inherit; font-size: 14px; }
+  table.sets input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .checkbox-block { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-block label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  .checkbox-block input { width: 22px; height: 22px; accent-color: var(--ok); }
+  .checkbox-block label.done { background: rgba(76,175,80,0.08); border-color: rgba(76,175,80,0.4); }
+
+  /* ===== DESKTOP LAYOUT (mockup C style — full 8-day grid) ===== */
+  @media (min-width: 900px) {
+    .mobile-view { display: none; }
+    .desktop-view { display: block; }
+    .day-switch { display: none; }
+  }
+
+  .grid-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  table.grid { border-collapse: collapse; width: 100%; }
+  table.grid th, table.grid td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 8px 10px; vertical-align: top; font-size: 13px; }
+  table.grid th:last-child, table.grid td:last-child { border-right: none; }
+  table.grid thead th { background: var(--card-2); color: var(--ink); font-weight: 600; text-align: left; position: sticky; top: 0; }
+  table.grid thead th.day { text-align: center; min-width: 110px; font-size: 12px; color: var(--muted); }
+  table.grid thead th.day.today { background: var(--today); color: var(--accent); }
+  table.grid td.ex { background: var(--card-2); min-width: 220px; }
+  table.grid td.ex .order { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.04em; }
+  table.grid td.ex .name { font-weight: 600; font-size: 14px; margin: 2px 0 4px; }
+  table.grid td.ex .rx { color: var(--muted); font-size: 11px; line-height: 1.4; }
+  table.grid td.ex .video { text-decoration: none; font-size: 12px; }
+  table.grid td.day-col { min-width: 110px; vertical-align: middle; }
+  table.grid td.day-col.today { background: var(--today); }
+  table.grid td.day-col.done { background: var(--readonly); color: var(--muted); font-size: 12px; }
+  table.grid input[type=number], table.grid input[type=text] {
+    width: 100%; min-width: 0; padding: 4px 6px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    font: inherit; font-size: 12px; border-radius: 4px;
+  }
+  table.grid td.day-col input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  table.grid .set-cell { display: grid; grid-template-columns: 22px 1fr; gap: 4px; align-items: center; margin-bottom: 4px; }
+  table.grid .set-cell:last-child { margin-bottom: 0; }
+  table.grid .set-label { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+  table.grid .set-inputs { display: grid; gap: 2px; }
+  table.grid .set-inputs.rwm { grid-template-columns: 1fr 1fr 1.4fr; }
+  table.grid .set-inputs.rm { grid-template-columns: 1fr 1.4fr; }
+  table.grid .set-inputs.hold { grid-template-columns: 1fr 1fr; }
+  table.grid .check-cell { display: flex; flex-direction: column; gap: 4px; }
+  table.grid .check-cell label { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+  table.grid input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--ok); }
+
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px; display: flex; gap: 8px; justify-content: center; z-index: 10; }
+  footer button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  footer button.primary { background: var(--accent); color: #1a1500; border-color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mobility · Pike &amp; H2T</h1>
+  <span class="meta">Phase 1 · Day 3 of 8</span>
+  <button class="pill active">Phase 1</button>
+  <button class="pill">Phase 2</button>
+  <button class="pill">Phase 3</button>
+  <button class="pill">⏱</button>
+  <button class="pill">♩</button>
+  <button class="pill">📖 Tips</button>
+</header>
+
+<main>
+
+<!-- ============ MOBILE: single-day cards (B style) ============ -->
+<div class="mobile-view">
+
+<div class="day-switch" role="tablist" aria-label="Day selector">
+  <button class="done">1</button>
+  <button class="done">2</button>
+  <button class="today">3</button>
+  <button>4</button>
+  <button>5</button>
+  <button>6</button>
+  <button>7</button>
+  <button>8</button>
+</div>
+
+<!-- A1: Rolling Feet (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">A1</div>
+    <div class="name">Rolling Feet</div>
+    <a class="video" href="https://link.matthewismith.com/rolling-feet" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Time</dt><dd>90s per side</dd>
+      <dt>Sets</dt><dd>1</dd>
+      <dt>Rest</dt><dd>as needed</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Left foot — 90s</label>
+      <label class="done"><input type="checkbox" checked> Right foot — 90s</label>
+    </div>
+  </div>
+</section>
+
+<!-- A2: Calf Stretch -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">A2 / B1</div>
+    <div class="name">Calf Stretch — Single Leg Standing</div>
+    <a class="video" href="https://link.matthewismith.com/calfstretch-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>8</dd>
+      <dt>Sets</dt><dd>1–2</dd>
+      <dt>Rest</dt><dd>as needed</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button><button>+ Set</button></div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Reps</th><th>Weight</th><th>Depth</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><input type="number" value="8"></td><td><input type="number" placeholder="lb"></td><td><input type="text" placeholder="toes touch"></td></tr>
+        <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- C1: Sciatic Nerve Ankle Joint Floss (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">C1</div>
+    <div class="name">Sciatic Nerve — Ankle Joint Floss</div>
+    <a class="video" href="https://link.matthewismith.com/sciatic-ankle-floss" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>8</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Set 1 — 8 reps</label>
+      <label><input type="checkbox"> Set 2 — 8 reps</label>
+      <label><input type="checkbox"> Set 3 — 8 reps (optional)</label>
+    </div>
+  </div>
+</section>
+
+<!-- D1: Pike Block Crush Leg Elevated (check) -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">D1</div>
+    <div class="name">Pike Block Crush — Leg Elevated</div>
+    <a class="video" href="https://link.matthewismith.com/leg-elevated-pike-block-crush" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Reps</dt><dd>5</dd>
+      <dt>Tempo</dt><dd>3s up / 3s down</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="checkbox-block">
+      <label><input type="checkbox"> Set 1</label>
+      <label><input type="checkbox"> Set 2</label>
+      <label><input type="checkbox"> Set 3 (optional)</label>
+    </div>
+  </div>
+</section>
+
+<!-- Pike Hang -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">—</div>
+    <div class="name">Pike Hang — Leg Elevated</div>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Hold</dt><dd>10s</dd>
+      <dt>Sets</dt><dd>1</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button></div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Hold (s)</th><th>Weight</th><th>Angle (°)</th></tr></thead>
+      <tbody><tr><td>1</td><td><input type="number" value="10"></td><td><input type="number"></td><td><input type="number"></td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Standing B-Stance -->
+<section class="exercise">
+  <div class="rx-col">
+    <div class="order">—</div>
+    <div class="name">Standing B-Stance</div>
+    <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶ Watch video</a>
+    <dl class="rx-grid">
+      <dt>Tempo</dt><dd>Contract 5s · Relax 5s</dd>
+      <dt>Sets</dt><dd>2–3</dd>
+      <dt>Rest</dt><dd>60s+</dd>
+    </dl>
+  </div>
+  <div class="input-col">
+    <div class="controls"><button>⏱ Rest</button><button>♩ Metronome</button><button>+ Set</button></div>
+    <table class="sets">
+      <thead><tr><th>#</th><th>Cycles</th><th>Weight</th><th>Depth</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+        <tr><td>2</td><td><input type="number"></td><td><input type="number"></td><td><input type="text"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /mobile-view -->
+
+
+<!-- ============ DESKTOP: full 8-day grid (C style) ============ -->
+<div class="desktop-view">
+
+<div class="grid-wrap">
+<table class="grid">
+  <thead>
+    <tr>
+      <th>Exercise</th>
+      <th class="day">Day 1</th>
+      <th class="day">Day 2</th>
+      <th class="day today">Day 3 · today</th>
+      <th class="day">Day 4</th>
+      <th class="day">Day 5</th>
+      <th class="day">Day 6</th>
+      <th class="day">Day 7</th>
+      <th class="day">Day 8</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- A1 Rolling Feet -->
+    <tr>
+      <td class="ex">
+        <div class="order">A1 · <a class="video" href="https://link.matthewismith.com/rolling-feet" target="_blank">▶</a></div>
+        <div class="name">Rolling Feet</div>
+        <div class="rx">90s per side · 1 set · rest as needed</div>
+      </td>
+      <td class="day-col done">✓ both sides</td>
+      <td class="day-col done">✓ both sides</td>
+      <td class="day-col today">
+        <div class="check-cell">
+          <label><input type="checkbox"> Left</label>
+          <label><input type="checkbox" checked> Right</label>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+    <!-- A2 Calf Stretch -->
+    <tr>
+      <td class="ex">
+        <div class="order">A2 / B1 · <a class="video" href="https://link.matthewismith.com/calfstretch-standing" target="_blank">▶</a></div>
+        <div class="name">Calf Stretch — Single Leg Standing</div>
+        <div class="rx">8 reps · 1–2 sets · rest as needed</div>
+      </td>
+      <td class="day-col done">s1: 8r / toes<br>s2: 8r / toes+</td>
+      <td class="day-col done">s1: 8r / toes+1cm<br>s2: 8r / toes+1cm</td>
+      <td class="day-col today">
+        <div class="set-cell"><span class="set-label">1</span>
+          <span class="set-inputs rwm"><input type="number" placeholder="r" value="8"><input type="number" placeholder="lb"><input type="text" placeholder="depth"></span>
+        </div>
+        <div class="set-cell"><span class="set-label">2</span>
+          <span class="set-inputs rwm"><input type="number" placeholder="r"><input type="number" placeholder="lb"><input type="text" placeholder="depth"></span>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+    <!-- C1 Sciatic Nerve Ankle Joint Floss -->
+    <tr>
+      <td class="ex">
+        <div class="order">C1 · <a class="video" href="https://link.matthewismith.com/sciatic-ankle-floss" target="_blank">▶</a></div>
+        <div class="name">Sciatic Nerve — Ankle Joint Floss</div>
+        <div class="rx">8 reps · 2–3 sets · 60s+</div>
+      </td>
+      <td class="day-col done">✓ ✓ ✓</td>
+      <td class="day-col done">✓ ✓ —</td>
+      <td class="day-col today">
+        <div class="check-cell">
+          <label><input type="checkbox"> S1</label>
+          <label><input type="checkbox"> S2</label>
+          <label><input type="checkbox"> S3</label>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+    <!-- D1 Pike Block Crush Leg Elevated -->
+    <tr>
+      <td class="ex">
+        <div class="order">D1 · <a class="video" href="https://link.matthewismith.com/leg-elevated-pike-block-crush" target="_blank">▶</a></div>
+        <div class="name">Pike Block Crush — Leg Elevated</div>
+        <div class="rx">5 reps · 3s up/down · 2–3 sets · 60s+</div>
+      </td>
+      <td class="day-col done">✓ ✓ —</td>
+      <td class="day-col done">✓ ✓ ✓</td>
+      <td class="day-col today">
+        <div class="check-cell">
+          <label><input type="checkbox"> S1</label>
+          <label><input type="checkbox"> S2</label>
+          <label><input type="checkbox"> S3</label>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+    <!-- Pike Hang -->
+    <tr>
+      <td class="ex">
+        <div class="order">— · <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶</a></div>
+        <div class="name">Pike Hang — Leg Elevated</div>
+        <div class="rx">10s hold · 1 set · 60s+</div>
+      </td>
+      <td class="day-col done">10s / 42°</td>
+      <td class="day-col done">10s / 44°</td>
+      <td class="day-col today">
+        <div class="set-cell"><span class="set-label">1</span>
+          <span class="set-inputs rwm"><input type="number" placeholder="s" value="10"><input type="number" placeholder="lb"><input type="number" placeholder="°"></span>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+    <!-- Standing B-Stance -->
+    <tr>
+      <td class="ex">
+        <div class="order">— · <a class="video" href="https://link.matthewismith.com/pike-hang-bstance-standing" target="_blank">▶</a></div>
+        <div class="name">Standing B-Stance</div>
+        <div class="rx">Contract 5s / Relax 5s · 2–3 sets · 60s+</div>
+      </td>
+      <td class="day-col done">2× / fingertips</td>
+      <td class="day-col done">3× / fingertips</td>
+      <td class="day-col today">
+        <div class="set-cell"><span class="set-label">1</span>
+          <span class="set-inputs rwm"><input type="number" placeholder="cyc"><input type="number" placeholder="lb"><input type="text" placeholder="depth"></span>
+        </div>
+        <div class="set-cell"><span class="set-label">2</span>
+          <span class="set-inputs rwm"><input type="number"><input type="number"><input type="text"></span>
+        </div>
+      </td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+      <td class="day-col"></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+
+<p style="color:var(--muted);font-size:12px;margin-top:10px">Today's column is editable. Past days show a compact summary. Resize the browser narrow to see the mobile single-day view.</p>
+
+</div><!-- /desktop-view -->
+
+</main>
+<footer>
+  <button>Export CSV</button>
+  <button class="primary">Save session</button>
+</footer>
+</body>
+</html>
