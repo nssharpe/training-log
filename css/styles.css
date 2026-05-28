@@ -156,6 +156,7 @@ table.grid .set-cell:last-child { margin-bottom: 0; }
 table.grid .set-label { color: var(--muted); font-size: 10px; text-transform: uppercase; }
 table.grid .set-inputs { display: grid; gap: 2px; }
 table.grid .set-inputs.rwm { grid-template-columns: 1fr 1fr 1.4fr; }
+table.grid .set-inputs.rw  { grid-template-columns: 1fr 1fr; }
 table.grid .set-inputs.rm  { grid-template-columns: 1fr 1.4fr; }
 table.grid .check-cell { display: flex; flex-direction: column; gap: 4px; }
 table.grid .check-cell label { display: flex; align-items: center; gap: 4px; font-size: 12px; }

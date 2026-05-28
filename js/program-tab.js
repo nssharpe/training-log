@@ -97,7 +97,7 @@ function renderExerciseCard(exercise, session, saveMeta) {
       body.append(lab);
     }
   } else {
-    const hasWeight = exercise.inputType === "repsWeightMeasurement";
+    const hasWeight = exercise.inputType === "repsWeightMeasurement" || exercise.inputType === "setsRepsWeight";
     const hasMeasurement = exercise.measurement != null;
     const headRow = el("tr", {},
       el("th", {}, "#"),
@@ -178,9 +178,9 @@ function renderGridRow(exercise, sessionsByDate, todayDate, saveMeta, onChange) 
       }
       cell.append(wrap);
     } else {
-      const hasWeight = exercise.inputType === "repsWeightMeasurement";
+      const hasWeight = exercise.inputType === "repsWeightMeasurement" || exercise.inputType === "setsRepsWeight";
       const hasMeasurement = exercise.measurement != null;
-      const inputClass = `set-inputs ${hasWeight ? "rwm" : "rm"}`;
+      const inputClass = `set-inputs ${hasWeight && hasMeasurement ? "rwm" : hasWeight ? "rw" : "rm"}`;
       for (let i = 0; i < exercise.defaultSets; i++) {
         const repsIn = el("input", { type: "number", placeholder: "r", readonly: isToday ? null : true });
         const wIn = hasWeight ? el("input", { type: "number", placeholder: "lb", readonly: isToday ? null : true }) : null;
