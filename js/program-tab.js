@@ -1,12 +1,18 @@
 // Shared rendering for the mobility and strength tabs.
-// Both follow the same shape: a "programKey" group (phase or split) with exercises;
-// on mobile we render one card per exercise for the selected day/date,
-// on desktop we render a wide grid (one column per recent date).
+// Both follow the same shape: a "programKey" group (phase or split) with exercises.
+// A date picker (defaults to today) selects which calendar date you're editing —
+// pick a past date to edit an older entry. On mobile we render one card per exercise
+// for the selected (day,) date; on desktop a wide grid where the selected column is
+// editable and the rest are read-only history you can click to jump to.
 
 import { loadSession, saveSession, listSessions } from "./store.js";
 import { startRest, parseRestSeconds, openMetronome } from "./timer.js";
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+// Local calendar date (so an evening workout logs to "today", not tomorrow-UTC).
+const todayISO = () => {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+};
 
 function el(tag, attrs = {}, ...children) {
   const e = document.createElement(tag);
@@ -40,6 +46,9 @@ function getVal(input) {
   if (input.type === "number") return input.value === "" ? null : Number(input.value);
   return input.value || "";
 }
+function hasWeightInput(ex) {
+  return ex.inputType === "repsWeightMeasurement" || ex.inputType === "setsRepsWeight";
+}
 
 // ---------- session data accessors ----------
 function ensureEntry(session, exKey, exercise) {
@@ -49,11 +58,17 @@ function ensureEntry(session, exKey, exercise) {
     for (let i = 0; i < exercise.defaultSets; i++) sets.push({});
     session.entries[exKey] = { sets, notes: "" };
   }
-  // pad if exercise grew defaultSets
   while (session.entries[exKey].sets.length < exercise.defaultSets) {
     session.entries[exKey].sets.push({});
   }
   return session.entries[exKey];
+}
+
+function sessionHasData(s) {
+  return Object.values(s?.entries || {}).some((e) =>
+    (e.sets || []).some((set) =>
+      set.reps != null || set.weight != null ||
+      (set.measurement != null && set.measurement !== "") || set.checked));
 }
 
 // ---------- exercise card (mobile) ----------
@@ -77,12 +92,9 @@ function renderExerciseCard(exercise, session, saveMeta) {
     exercise.verify ? el("div", { class: "verify-flag" }, "⚠ verify against PDF") : null,
   );
 
-  // input column
   const restSec = parseRestSeconds(exercise.prescription.rest);
   const controls = el("div", { class: "controls" },
-    restSec
-      ? el("button", { onClick: () => startRest(restSec) }, `⏱ Rest ${restSec}s`)
-      : el("button", { onClick: () => startRest(60) }, "⏱ Rest 60s"),
+    el("button", { onClick: () => startRest(restSec || 60) }, `⏱ Rest ${restSec || 60}s`),
     el("button", { onClick: openMetronome }, "♩ Metronome"),
   );
 
@@ -93,11 +105,10 @@ function renderExerciseCard(exercise, session, saveMeta) {
       const cb = el("input", { type: "checkbox" });
       setVal(cb, entry.sets[i]?.checked);
       bindAutoSave(cb, () => { entry.sets[i] = { checked: cb.checked }; triggerSave(); });
-      const lab = el("label", {}, cb, ` Set ${i + 1}`);
-      body.append(lab);
+      body.append(el("label", {}, cb, ` Set ${i + 1}`));
     }
   } else {
-    const hasWeight = exercise.inputType === "repsWeightMeasurement" || exercise.inputType === "setsRepsWeight";
+    const hasWeight = hasWeightInput(exercise);
     const hasMeasurement = exercise.measurement != null;
     const headRow = el("tr", {},
       el("th", {}, "#"),
@@ -136,12 +147,13 @@ function renderExerciseCard(exercise, session, saveMeta) {
     body = el("table", { class: "sets" }, el("thead", {}, headRow), tbody);
   }
 
-  const inputCol = el("div", { class: "input-col" }, controls, body);
-  return el("section", { class: "exercise" }, rxCol, inputCol);
+  return el("section", { class: "exercise" }, rxCol, el("div", { class: "input-col" }, controls, body));
 }
 
 // ---------- desktop grid ----------
-function renderGridRow(exercise, sessionsByDate, todayDate, saveMeta, onChange) {
+// columns: [{ label, editable, session, navHash }]. Only the editable column writes,
+// using editableMeta; the rest are read-only and (if navHash) clickable in the header.
+function renderGridRow(exercise, columns, editableMeta, onChange) {
   const ex = el("td", { class: "ex" },
     el("div", { class: "order" },
       exercise.order,
@@ -153,22 +165,20 @@ function renderGridRow(exercise, sessionsByDate, todayDate, saveMeta, onChange) 
   );
 
   const cells = [ex];
-  for (const date of sessionsByDate.dates) {
-    const session = sessionsByDate.byDate.get(date) || { date, entries: {} };
-    const isToday = date === todayDate;
-    const cellClass = isToday ? "day-col today" : "day-col done";
-    const cell = el("td", { class: cellClass });
-    const entry = ensureEntry(session, exercise.key, exercise);
+  for (const col of columns) {
+    const isEd = col.editable;
+    const cell = el("td", { class: "day-col" + (isEd ? " today" : " done") });
+    const entry = ensureEntry(col.session, exercise.key, exercise);
 
     if (exercise.inputType === "check") {
       const wrap = el("div", { class: "check-cell" });
       for (let i = 0; i < exercise.defaultSets; i++) {
-        if (isToday) {
+        if (isEd) {
           const cb = el("input", { type: "checkbox" });
           setVal(cb, entry.sets[i]?.checked);
           bindAutoSave(cb, () => {
             entry.sets[i] = { checked: cb.checked };
-            saveSession({ ...saveMeta, date }, { entries: session.entries });
+            saveSession(editableMeta, { entries: col.session.entries });
             onChange?.();
           });
           wrap.append(el("label", {}, cb, ` S${i + 1}`));
@@ -178,34 +188,35 @@ function renderGridRow(exercise, sessionsByDate, todayDate, saveMeta, onChange) 
       }
       cell.append(wrap);
     } else {
-      const hasWeight = exercise.inputType === "repsWeightMeasurement" || exercise.inputType === "setsRepsWeight";
+      const hasWeight = hasWeightInput(exercise);
       const hasMeasurement = exercise.measurement != null;
       const inputClass = `set-inputs ${hasWeight && hasMeasurement ? "rwm" : hasWeight ? "rw" : "rm"}`;
       for (let i = 0; i < exercise.defaultSets; i++) {
-        const repsIn = el("input", { type: "number", placeholder: "r", readonly: isToday ? null : true });
-        const wIn = hasWeight ? el("input", { type: "number", placeholder: "lb", readonly: isToday ? null : true }) : null;
+        const repsIn = el("input", { type: "number", placeholder: "r", readonly: isEd ? null : true });
+        const wIn = hasWeight ? el("input", { type: "number", placeholder: "lb", readonly: isEd ? null : true }) : null;
         const mIn = hasMeasurement
-          ? el("input", { type: exercise.measurement.type === "number" ? "number" : "text", placeholder: hasWeight ? "depth" : "m", readonly: isToday ? null : true })
+          ? el("input", { type: exercise.measurement.type === "number" ? "number" : "text", placeholder: hasWeight ? "depth" : "m", readonly: isEd ? null : true })
           : null;
         setVal(repsIn, entry.sets[i]?.reps);
         if (wIn) setVal(wIn, entry.sets[i]?.weight);
         if (mIn) setVal(mIn, entry.sets[i]?.measurement);
-        if (isToday) {
+        if (isEd) {
           const onChg = () => {
             entry.sets[i] = {
               reps: getVal(repsIn),
               ...(hasWeight ? { weight: getVal(wIn) } : {}),
               ...(hasMeasurement ? { measurement: getVal(mIn) } : {}),
             };
-            saveSession({ ...saveMeta, date }, { entries: session.entries });
+            saveSession(editableMeta, { entries: col.session.entries });
             onChange?.();
           };
           bindAutoSave(repsIn, onChg);
           if (wIn) bindAutoSave(wIn, onChg);
           if (mIn) bindAutoSave(mIn, onChg);
         }
-        const inputs = el("span", { class: inputClass }, repsIn, wIn, mIn);
-        cell.append(el("div", { class: "set-cell" }, el("span", { class: "set-label" }, String(i + 1)), inputs));
+        cell.append(el("div", { class: "set-cell" },
+          el("span", { class: "set-label" }, String(i + 1)),
+          el("span", { class: inputClass }, repsIn, wIn, mIn)));
       }
     }
     cells.push(cell);
@@ -223,29 +234,35 @@ function formatPrescription(p) {
 }
 
 // ---------- public: render a "program tab" ----------
-// opts = {
-//   tab, container, programs, getKey, getDayCount?, dayLabel?, headerLabel
-// }
 export async function renderProgramTab(opts) {
   const { tab, container, programs } = opts;
   container.innerHTML = "";
+  const today = todayISO();
 
-  // selected program/day from URL hash or sane default
+  // selected program/day/date from URL hash (date defaults to today)
   const hashParams = new URLSearchParams(location.hash.split("?")[1] || "");
-  let programKey = hashParams.get("p") || programs[0].id;
+  const program = programs.find((p) => p.id === hashParams.get("p")) || programs[0];
+  const programKey = program.id;
   let day = parseInt(hashParams.get("d"), 10);
   if (!Number.isFinite(day)) day = 1;
-  const program = programs.find((p) => p.id === programKey) || programs[0];
-  programKey = program.id;
+  let selectedDate = hashParams.get("date");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate || "")) selectedDate = today;
+  const isToday = selectedDate === today;
 
-  // selector row
+  const hashFor = ({ p = programKey, d = day, date = selectedDate } = {}) => {
+    let h = `#${tab}?p=${p}`;
+    if (program.daysPerCycle) h += `&d=${d}`;
+    if (date && date !== today) h += `&date=${date}`;
+    return h;
+  };
+  const rerender = () => renderProgramTab(opts);
+
+  // ----- selector row -----
   const programGroup = el("div", { class: "group" });
   for (const p of programs) {
     programGroup.append(el("button", {
       class: "pill" + (p.id === programKey ? " active" : ""),
-      onClick: () => {
-        location.hash = `#${tab}?p=${p.id}&d=1`;
-      },
+      onClick: () => { location.hash = hashFor({ p: p.id, d: 1 }); },
     }, p.name));
   }
   const selectors = el("div", { class: "selectors" },
@@ -253,96 +270,141 @@ export async function renderProgramTab(opts) {
     programGroup,
   );
 
-  // day switcher (mobility only)
-  let daysWrap = null;
   if (program.daysPerCycle) {
-    daysWrap = el("div", { class: "day-switch" });
+    const daysWrap = el("div", { class: "day-switch" });
     for (let d = 1; d <= program.daysPerCycle; d++) {
-      const isToday = d === day;
       daysWrap.append(el("button", {
-        class: isToday ? "today" : "",
-        onClick: () => { location.hash = `#${tab}?p=${programKey}&d=${d}`; },
+        class: d === day ? "today" : "",
+        onClick: () => { location.hash = hashFor({ d }); },
       }, String(d)));
     }
     selectors.append(el("span", { class: "label" }, "Day"), daysWrap);
   }
 
+  // date picker + today reset
+  const dateInput = el("input", { type: "date", class: "date-input", value: selectedDate });
+  dateInput.addEventListener("change", () => {
+    location.hash = hashFor({ date: dateInput.value || today });
+  });
+  const dateGroup = el("div", { class: "group" }, el("span", { class: "label" }, "Date"), dateInput);
+  if (!isToday) {
+    dateGroup.append(el("button", { class: "btn-sm", onClick: () => { location.hash = hashFor({ date: today }); } }, "Today"));
+  }
+  selectors.append(dateGroup);
+
+  // fill-from-last-workout
+  selectors.append(el("button", {
+    class: "btn-sm fill-btn",
+    title: "Copy reps/weight/measurement from your previous session into empty fields",
+    onClick: () => fillFromLast(),
+  }, "↤ Fill from last workout"));
+
+  if (!isToday) {
+    selectors.append(el("span", { class: "editing-flag" }, `editing ${selectedDate}`));
+  }
+
   container.append(selectors);
 
-  // load today's session
-  const today = todayISO();
-  const meta = { tab, programKey, day: program.daysPerCycle ? day : undefined, date: today };
+  // ----- load the editable session for (programKey, day?, selectedDate) -----
+  const meta = { tab, programKey, day: program.daysPerCycle ? day : undefined, date: selectedDate };
   const session = (await loadSession(meta)) || { ...meta, entries: {} };
 
-  // mobile view (cards)
+  // mobile view (cards) — same session object as the desktop editable column
   const mobile = el("div", { class: "mobile-view" });
-  for (const ex of program.exercises) {
-    mobile.append(renderExerciseCard(ex, session, meta));
-  }
+  for (const ex of program.exercises) mobile.append(renderExerciseCard(ex, session, meta));
 
   // desktop view (grid)
   const desktop = el("div", { class: "desktop-view" });
-  await renderDesktopGrid({ tab, program, day, today, mount: desktop });
+  await renderDesktopGrid({ tab, program, day, today, selectedDate, session, meta, hashFor, mount: desktop });
 
   container.append(mobile, desktop);
+
+  // ----- fill from last workout -----
+  async function fillFromLast() {
+    const all = await listSessions({ tab, programKey });
+    const prev = all.find((s) =>
+      (program.daysPerCycle ? s.day === day : true) &&
+      (s.date || "") < selectedDate &&
+      sessionHasData(s));
+    if (!prev) { alert("No earlier workout found to copy from."); return; }
+
+    let filled = 0;
+    for (const ex of program.exercises) {
+      if (ex.inputType === "check") continue; // don't pre-check boxes you haven't done
+      const cur = ensureEntry(session, ex.key, ex);
+      const src = prev.entries?.[ex.key];
+      if (!src) continue;
+      for (let i = 0; i < cur.sets.length; i++) {
+        const ss = src.sets?.[i];
+        if (!ss) continue;
+        const cs = cur.sets[i] || (cur.sets[i] = {});
+        for (const f of ["reps", "weight", "measurement"]) {
+          const empty = cs[f] == null || cs[f] === "";
+          if (empty && ss[f] != null && ss[f] !== "") { cs[f] = ss[f]; filled++; }
+        }
+      }
+    }
+    if (!filled) {
+      alert(`Found your last workout (${prev.date}) but every field already has a value — nothing to fill.`);
+      return;
+    }
+    saveSession(meta, { entries: session.entries });
+    rerender();
+  }
 }
 
-async function renderDesktopGrid({ tab, program, day, today, mount }) {
-  // For mobility: render columns = each day of the cycle (1..N), today's column highlighted.
-  // For strength: render columns = last 4 sessions of this split by date.
-  let dates = [];
-  const byDate = new Map();
-  let dateLabels = new Map();
+async function renderDesktopGrid({ tab, program, day, today, selectedDate, session, meta, hashFor, mount }) {
+  const all = await listSessions({ tab, programKey: program.id });
+  const columns = [];
+  const editLabel = selectedDate === today ? "today" : selectedDate;
 
   if (program.daysPerCycle) {
-    // load each day's most recent session
-    const all = await listSessions({ tab, programKey: program.id });
-    // map day -> latest session
+    // most-recent session per day-of-cycle (list is sorted desc by date)
     const byDay = new Map();
-    for (const s of all) {
-      if (!byDay.has(s.day)) byDay.set(s.day, s);
-    }
+    for (const s of all) if (s.day != null && !byDay.has(s.day)) byDay.set(s.day, s);
     for (let d = 1; d <= program.daysPerCycle; d++) {
-      const isToday = d === day;
-      const existing = byDay.get(d);
-      const dateForCol = isToday ? today : (existing?.date || `day-${d}`);
-      dates.push(dateForCol);
-      dateLabels.set(dateForCol, `Day ${d}${isToday ? " · today" : ""}`);
-      if (existing && existing.date === dateForCol) byDate.set(dateForCol, existing);
+      if (d === day) {
+        columns.push({ label: `Day ${d} · ${editLabel}`, editable: true, session });
+      } else {
+        const s = byDay.get(d);
+        columns.push({
+          label: `Day ${d}${s ? ` · ${s.date}` : ""}`,
+          editable: false,
+          session: s || { tab, programKey: program.id, day: d, date: null, entries: {} },
+          navHash: s ? hashFor({ d, date: s.date }) : null,
+        });
+      }
     }
-    if (!byDate.has(today)) byDate.set(today, { tab, programKey: program.id, day, date: today, entries: {} });
   } else {
-    // strength: last 4 sessions
-    const all = await listSessions({ tab, programKey: program.id });
-    const recent = all.slice(0, 3).map((s) => s.date);
-    dates = [today, ...recent.filter((d) => d !== today)].slice(0, 4);
-    for (const s of all) if (!byDate.has(s.date)) byDate.set(s.date, s);
-    for (const d of dates) {
-      dateLabels.set(d, d === today ? `${d} · today` : d);
-      if (!byDate.has(d)) byDate.set(d, { tab, programKey: program.id, date: d, entries: {} });
+    columns.push({ label: `${selectedDate} · ${editLabel === "today" ? "today" : "editing"}`, editable: true, session });
+    const recent = all.map((s) => s.date).filter((d) => d && d !== selectedDate);
+    for (const d of recent.slice(0, 3)) {
+      columns.push({
+        label: d,
+        editable: false,
+        session: all.find((s) => s.date === d),
+        navHash: hashFor({ date: d }),
+      });
     }
   }
-  // Mobility: keep today first/highlighted but show all days in order 1..N (left-to-right).
-  // dates already ordered 1..N for mobility; reorder so today is highlighted in place.
 
   const headTr = el("tr", {}, el("th", {}, "Exercise"));
-  for (const d of dates) {
-    const isToday = d === today;
-    headTr.append(el("th", { class: "day" + (isToday ? " today" : "") }, dateLabels.get(d) || d));
+  for (const col of columns) {
+    const th = el("th", { class: "day" + (col.editable ? " today" : "") + (col.navHash ? " clickable" : "") }, col.label);
+    if (col.navHash) {
+      th.title = "Click to edit this entry";
+      th.addEventListener("click", () => { location.hash = col.navHash; });
+    }
+    headTr.append(th);
   }
 
   const tbody = el("tbody");
-  const sessionsByDate = { dates, byDate };
-  for (const ex of program.exercises) {
-    tbody.append(renderGridRow(ex, sessionsByDate, today, { tab, programKey: program.id, day: program.daysPerCycle ? day : undefined }));
-  }
+  for (const ex of program.exercises) tbody.append(renderGridRow(ex, columns, meta));
 
-  const wrap = el("div", { class: "grid-wrap" },
-    el("table", { class: "grid" }, el("thead", {}, headTr), tbody),
-  );
-  mount.append(wrap,
+  mount.append(
+    el("div", { class: "grid-wrap" }, el("table", { class: "grid" }, el("thead", {}, headTr), tbody)),
     el("p", { class: "hint" }, program.daysPerCycle
-      ? "Today's column is editable. Past days show the most recent entry for each day of the phase."
-      : "Today's column is editable. Other columns show your most recent sessions for this split."),
+      ? "The highlighted column is editable. Other days show your most recent entry — click a column header to edit it, or pick a date above to edit a past session."
+      : "The highlighted column is editable. Click another column's header, or pick a date above, to edit a past session."),
   );
 }

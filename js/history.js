@@ -68,16 +68,35 @@ export async function renderHistory(container) {
     return;
   }
 
+  const span = (cls, text) => {
+    const el = document.createElement("span");
+    if (cls) el.className = cls;
+    el.textContent = text;
+    return el;
+  };
+
   for (const s of all) {
     const row = document.createElement("div");
     row.className = "history-row";
     const tag = s.tab === "mobility" ? "🤸" : "💪";
     const dayBit = s.day != null ? ` · Day ${s.day}` : "";
-    row.innerHTML = `
-      <span class="date">${s.date || "?"}</span>
-      <span>${tag} ${programName(s.tab, s.programKey)}${dayBit}</span>
-      <span class="summary">${summarize(s)}</span>
-    `;
+    row.append(
+      span("date", s.date || "?"),
+      span(null, `${tag} ${programName(s.tab, s.programKey)}${dayBit}`),
+      span("summary", summarize(s)),
+    );
+
+    // click to open this session for editing on its tab
+    if (s.tab && s.programKey && s.date) {
+      let hash = `#${s.tab}?p=${s.programKey}`;
+      if (s.day != null) hash += `&d=${s.day}`;
+      hash += `&date=${s.date}`;
+      row.className = "history-row clickable";
+      row.title = "Open to view / edit";
+      row.append(span("edit-hint", "edit ✎"));
+      row.addEventListener("click", () => { location.hash = hash; });
+    }
+
     list.append(row);
   }
 }

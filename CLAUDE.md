@@ -56,6 +56,15 @@ Doc shape:
 
 localStorage mirrors every write under key `tlog:{id}`. On load, the doc with higher `updatedAt` wins.
 
+## Date selection & editing past entries
+
+- Hash params drive the editable session: `#mobility?p=p2&d=3&date=YYYY-MM-DD`. `date` is omitted when it's today.
+- The selector row has a `<input type="date">` (defaults to local today). Changing it just rewrites the hash → `hashchange` → re-render. A "Today" reset button + "editing {date}" flag appear when not on today.
+- **Editing an older entry = pick its date** (mobile or desktop). The mobile cards and the desktop grid's highlighted column both edit the `(programKey, day?, selectedDate)` session — same in-memory object.
+- Fast shortcuts to old entries: clickable desktop grid history-column headers, and clickable History-tab rows. Both just set the hash.
+- **"↤ Fill from last workout"** button: finds the most recent prior session for the same `(programKey, day?)` with data, and copies reps/weight/measurement into *empty* fields only (never overwrites; never auto-checks checkboxes). Then saves + re-renders.
+- `todayISO()` in program-tab.js uses **local** calendar date (evening workouts log to today, not tomorrow-UTC).
+
 ## Program data structure
 
 Each exercise:
