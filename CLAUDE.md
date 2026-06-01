@@ -100,6 +100,8 @@ Each exercise:
 - localStorage write is synchronous and immediate (no debounce).
 - Firestore write is debounced ~600ms after the last keystroke, and force-flushed on input blur, `visibilitychange` (tab hidden), and `beforeunload`.
 - Header indicator: empty → "saving…" → "saved ✓". `"local ✓"` shown when Firebase isn't configured.
+- On a failed cloud write/delete the indicator shows `"offline · local only"` and a **Reconnect** button appears (`#reconnect-btn`). Failed ids are queued in `failedWrites`/`failedDeletes`; `reconnect()` (in store.js) re-attempts them (reading latest from localStorage), re-inits Firebase if needed, and runs a connectivity probe when the queue is empty. Success → "reconnected ✓ · N uploads"; failure → "couldn't connect" then reverts to offline. **Data is never lost on failure** — it's always in localStorage.
+- Firestore reserves doc ids matching `__...__`; the connectivity probe uses `"connectivity-probe"` (no double underscores) to avoid an `invalid-argument` error.
 
 ## Common tweak recipes
 

@@ -40,6 +40,13 @@ button { font: inherit; color: inherit; }
 .save-indicator.saving { color: var(--warn); }
 .save-indicator.saved { color: var(--ok); }
 .save-indicator.error { color: #ff6b6b; }
+.reconnect-btn {
+  font: inherit; font-size: 12px; padding: 3px 9px;
+  border: 1px solid var(--warn); background: transparent; color: var(--warn);
+  border-radius: 6px; cursor: pointer;
+}
+.reconnect-btn:hover { background: var(--warn); color: #1a1500; }
+.reconnect-btn[hidden] { display: none; }
 
 .pill {
   display: inline-flex; align-items: center; gap: 6px;

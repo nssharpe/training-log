@@ -26,15 +26,21 @@ async function initFirestore() {
     return null;
   }
 }
-const dbReady = initFirestore();
+let dbReady = initFirestore();
 
-// ---------- save indicator events ----------
+// ---------- save indicator + reconnect button ----------
 const indicator = document.getElementById("save-indicator");
+const reconnectBtn = document.getElementById("reconnect-btn");
 let savedTimer = null;
 function setStatus(status, text) {
+  // reconnect button only relevant in the offline/error state
+  if (reconnectBtn) reconnectBtn.hidden = status !== "error";
   if (!indicator) return;
   indicator.className = "save-indicator " + status;
   indicator.textContent = text;
+  indicator.title = status === "error"
+    ? "Your data is saved on this device. Click Reconnect to upload it to the cloud."
+    : "";
   if (status === "saved") {
     clearTimeout(savedTimer);
     savedTimer = setTimeout(() => {
@@ -125,6 +131,10 @@ export async function listSessions({ tab, programKey, limit = 200 } = {}) {
 // ---------- write (debounced auto-save) ----------
 const pendingTimers = new Map(); // id -> timeout
 const pendingDocs = new Map();   // id -> latest data
+// Writes/deletes that failed to reach Firestore (data is still safe in localStorage).
+// "Reconnect" re-attempts these. Keyed by doc id.
+const failedWrites = new Set();
+const failedDeletes = new Set();
 
 function flushNow(id) {
   const data = pendingDocs.get(id);
@@ -137,16 +147,58 @@ function flushNow(id) {
 
 async function writeRemote(id, data) {
   await dbReady;
-  if (!db) return;
+  if (!db) { failedWrites.add(id); setStatus("error", "offline · local only"); return; }
   setStatus("saving", "saving…");
   try {
     const ref = firestore.doc(db, "sessions", id);
     await firestore.setDoc(ref, data, { merge: false });
+    failedWrites.delete(id);
     setStatus("saved", "saved ✓");
   } catch (e) {
     console.warn("Firestore write failed", e);
+    failedWrites.add(id);
     setStatus("error", "offline · local only");
   }
+}
+
+// Re-attempt every queued write/delete against Firestore. Returns a summary.
+export async function reconnect() {
+  if (!isFirebaseConfigured()) return { ok: false, reason: "not-configured" };
+  await dbReady;
+  if (!db) { dbReady = initFirestore(); await dbReady; }
+  if (!db) return { ok: false, reason: "init-failed" };
+
+  // fold any still-pending debounced writes into the retry set
+  for (const id of [...pendingDocs.keys()]) {
+    failedWrites.add(id);
+    pendingDocs.delete(id);
+    clearTimeout(pendingTimers.get(id));
+    pendingTimers.delete(id);
+  }
+
+  let uploaded = 0;
+  try {
+    for (const id of [...failedWrites]) {
+      const raw = localStorage.getItem(lsKey(id));
+      if (!raw) { failedWrites.delete(id); continue; } // deleted meanwhile
+      await firestore.setDoc(firestore.doc(db, "sessions", id), JSON.parse(raw), { merge: false });
+      failedWrites.delete(id);
+      uploaded++;
+    }
+    for (const id of [...failedDeletes]) {
+      await firestore.deleteDoc(firestore.doc(db, "sessions", id));
+      failedDeletes.delete(id);
+      uploaded++;
+    }
+    // nothing queued? do a lightweight connectivity probe so we don't falsely claim success
+    if (uploaded === 0) {
+      await firestore.getDoc(firestore.doc(db, "sessions", "connectivity-probe"));
+    }
+  } catch (e) {
+    console.warn("Reconnect attempt failed", e);
+    return { ok: false, reason: "unreachable", uploaded };
+  }
+  return { ok: true, uploaded };
 }
 
 export function saveSession(meta, data) {
@@ -178,12 +230,36 @@ export async function deleteSession(metaOrId) {
     setStatus("saving", "deleting…");
     try {
       await firestore.deleteDoc(firestore.doc(db, "sessions", id));
+      failedDeletes.delete(id);
       setStatus("saved", "deleted ✓");
     } catch (e) {
       console.warn("Firestore delete failed", e);
+      failedDeletes.add(id);
       setStatus("error", "offline · local only");
     }
   }
+}
+
+// ---------- reconnect button ----------
+if (reconnectBtn) {
+  reconnectBtn.addEventListener("click", async () => {
+    reconnectBtn.hidden = true;
+    if (indicator) { indicator.className = "save-indicator saving"; indicator.textContent = "reconnecting…"; indicator.title = ""; }
+    const res = await reconnect();
+    if (!indicator) return;
+    if (res.ok) {
+      indicator.className = "save-indicator saved";
+      indicator.textContent = res.uploaded
+        ? `reconnected ✓ · ${res.uploaded} upload${res.uploaded > 1 ? "s" : ""}`
+        : "reconnected ✓ · up to date";
+      clearTimeout(savedTimer);
+      savedTimer = setTimeout(() => { indicator.textContent = "saved ✓"; }, 3500);
+    } else {
+      indicator.className = "save-indicator error";
+      indicator.textContent = "couldn't connect";
+      setTimeout(() => { setStatus("error", "offline · local only"); }, 1800);
+    }
+  });
 }
 
 // flush on tab hide / unload
