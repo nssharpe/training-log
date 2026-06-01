@@ -98,12 +98,12 @@ export async function listSessions({ tab, programKey, limit = 200 } = {}) {
   if (db) {
     try {
       const col = firestore.collection(db, "sessions");
+      // Equality filters only — no orderBy/limit — so Firestore needs no composite
+      // index (it merges single-field indexes). We sort + cap client-side below.
       const filters = [];
       if (tab) filters.push(firestore.where("tab", "==", tab));
       if (programKey) filters.push(firestore.where("programKey", "==", programKey));
-      const q = filters.length
-        ? firestore.query(col, ...filters, firestore.orderBy("date", "desc"), firestore.limit(limit))
-        : firestore.query(col, firestore.orderBy("date", "desc"), firestore.limit(limit));
+      const q = filters.length ? firestore.query(col, ...filters) : firestore.query(col);
       const snap = await firestore.getDocs(q);
       snap.forEach((d) => {
         const data = d.data();
@@ -117,7 +117,9 @@ export async function listSessions({ tab, programKey, limit = 200 } = {}) {
       console.warn("Firestore list failed; using local", e);
     }
   }
-  return [...out.values()].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  return [...out.values()]
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .slice(0, limit);
 }
 
 // ---------- write (debounced auto-save) ----------

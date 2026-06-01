@@ -92,6 +92,7 @@ Each exercise:
 - Project: `training-log-225de` on `nssharpe@gmail.com` (Spark free tier).
 - Firestore rules wide-open. Rationale: single user, personal training data (low stakes), apiKey ships client-side anyway. CSV exports serve as backup.
 - If you ever need real privacy, switch to email-link auth and per-user partition the collection. **Don't** introduce anon auth as a security layer — it doesn't gate anything.
+- **No composite indexes.** `listSessions()` queries with equality filters only (no `orderBy`/`limit` in the Firestore query) and sorts + caps client-side. This avoids needing composite indexes (which would otherwise error with `failed-precondition`). Don't add `orderBy` back to those queries.
 
 ## Auto-save behavior
 
