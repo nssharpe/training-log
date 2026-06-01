@@ -249,6 +249,14 @@ export async function renderProgramTab(opts) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate || "")) selectedDate = today;
   const isToday = selectedDate === today;
 
+  // When no day is explicitly chosen, resume at the day AFTER the most recently
+  // logged one (wrapping 8 -> 1), so landing on the tab lands on "what's next".
+  if (program.daysPerCycle && !hashParams.has("d")) {
+    const prior = await listSessions({ tab, programKey });
+    const last = prior.find((s) => s.day != null && sessionHasData(s));
+    if (last) day = (last.day % program.daysPerCycle) + 1;
+  }
+
   const hashFor = ({ p = programKey, d = day, date = selectedDate } = {}) => {
     let h = `#${tab}?p=${p}`;
     if (program.daysPerCycle) h += `&d=${d}`;
@@ -262,7 +270,8 @@ export async function renderProgramTab(opts) {
   for (const p of programs) {
     programGroup.append(el("button", {
       class: "pill" + (p.id === programKey ? " active" : ""),
-      onClick: () => { location.hash = hashFor({ p: p.id, d: 1 }); },
+      // omit day/date so the new program lands on its own "next day", today
+      onClick: () => { location.hash = `#${tab}?p=${p.id}`; },
     }, p.name));
   }
   const selectors = el("div", { class: "selectors" },
