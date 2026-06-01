@@ -220,6 +220,15 @@ table.grid thead th.day.clickable:hover { color: var(--accent); text-decoration:
 .history-row .summary { color: var(--muted); font-size: 13px; flex: 1; }
 .history-row .edit-hint { color: var(--accent); font-size: 12px; opacity: 0; }
 .history-row.clickable:hover .edit-hint { opacity: 1; }
+.history-row .del-btn {
+  font: inherit; font-size: 12px; padding: 3px 9px; cursor: pointer;
+  border: 1px solid #5c2b2b; background: transparent; color: #ff6b6b;
+  border-radius: 6px; opacity: 0; transition: opacity 0.1s;
+}
+.history-row:hover .del-btn { opacity: 1; }
+.history-row .del-btn:hover { background: #ff6b6b; color: #1a0e0e; border-color: #ff6b6b; }
+/* keep visible on touch devices that can't hover */
+@media (hover: none) { .history-row .del-btn, .history-row .edit-hint { opacity: 1; } }
 .history-empty { color: var(--muted); padding: 30px; text-align: center; }
 
 /* small */

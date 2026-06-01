@@ -163,6 +163,27 @@ export function saveSession(meta, data) {
   pendingTimers.set(id, setTimeout(() => flushNow(id), 600));
 }
 
+// ---------- delete ----------
+export async function deleteSession(metaOrId) {
+  const id = typeof metaOrId === "string" ? metaOrId : docId(metaOrId);
+  localStorage.removeItem(lsKey(id));
+  // cancel any pending write for this doc
+  clearTimeout(pendingTimers.get(id));
+  pendingTimers.delete(id);
+  pendingDocs.delete(id);
+  await dbReady;
+  if (db) {
+    setStatus("saving", "deleting…");
+    try {
+      await firestore.deleteDoc(firestore.doc(db, "sessions", id));
+      setStatus("saved", "deleted ✓");
+    } catch (e) {
+      console.warn("Firestore delete failed", e);
+      setStatus("error", "offline · local only");
+    }
+  }
+}
+
 // flush on tab hide / unload
 function flushAll() {
   for (const id of [...pendingDocs.keys()]) flushNow(id);

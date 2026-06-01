@@ -1,4 +1,4 @@
-import { listSessions } from "./store.js";
+import { listSessions, deleteSession, docId } from "./store.js";
 import { sessionsToCsv, downloadCsv } from "./csv.js";
 import { MOBILITY } from "../data/mobility-program.js";
 import { STRENGTH } from "../data/strength-program.js";
@@ -86,7 +86,21 @@ export async function renderHistory(container) {
       span("summary", summarize(s)),
     );
 
-    // click to open this session for editing on its tab
+    // delete button — appears on hover, left of the edit hint
+    const delBtn = document.createElement("button");
+    delBtn.className = "del-btn";
+    delBtn.textContent = "Delete";
+    delBtn.title = "Delete this session";
+    delBtn.addEventListener("click", async (e) => {
+      e.stopPropagation(); // don't trigger the row's open-to-edit
+      const label = `${programName(s.tab, s.programKey)}${dayBit} on ${s.date}`;
+      if (!confirm(`Delete this logged session?\n\n${label}\n\nThis can't be undone.`)) return;
+      await deleteSession(docId({ tab: s.tab, programKey: s.programKey, day: s.day, date: s.date }));
+      renderHistory(container); // refresh the list
+    });
+    row.append(delBtn);
+
+    // click row to open this session for editing on its tab
     if (s.tab && s.programKey && s.date) {
       let hash = `#${s.tab}?p=${s.programKey}`;
       if (s.day != null) hash += `&d=${s.day}`;
