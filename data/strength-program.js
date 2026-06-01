@@ -47,7 +47,7 @@ export const STRENGTH = {
       exercises: [
         ex("A1", "Supinated Curls", "12", "3010"),
         ex("A2", "Hammer Curls", "12", "3010"),
-        ex("B1", "Resisted Supination / Pronation", "12", "2020"),
+        ex("B1", "Resisted Pronation / Supination", "12", "2020", 3, "check"),
         ex("B2", "Zottman Curls", "10", "3010"),
       ],
     },
