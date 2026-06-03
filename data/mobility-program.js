@@ -188,6 +188,7 @@ const shoulderProgram = {
       defaultSets: 3,
       measurement: { type: "text", label: "Depth" },
       note: "On the last rep, remove the band and externally rotate without assistance for the 8s isometric hold.",
+      videoUrl: "https://www.youtube.com/watch?v=ITCc-DSpgLs",
     },
     {
       key: "sf-a2-prone-db-ext-rotation",
@@ -197,6 +198,7 @@ const shoulderProgram = {
       prescription: { reps: "5–8", tempo: "3112", sets: "2–3", rest: "60s" },
       defaultSets: 3,
       note: "Support elbow on an object level with your shoulder. Torso parallel to the ground.",
+      videoUrl: "https://www.youtube.com/watch?v=uv0K-rzAMTI&feature=youtu.be",
     },
     {
       key: "sf-b1-pillar-lat-stretch",
@@ -207,6 +209,7 @@ const shoulderProgram = {
       defaultSets: 3,
       measurement: { type: "text", label: "Depth" },
       note: "Palm toward your grip. Create a long arc along your spine. Push with the bottom hand. Posteriorly tilt the pelvis.",
+      videoUrl: "https://www.youtube.com/watch?v=Bqge_oSmHE8&feature=youtu.be",
     },
     {
       key: "sf-b2-horiz-db-lower-trap-raise",
@@ -216,6 +219,7 @@ const shoulderProgram = {
       prescription: { reps: "5–8", tempo: "3112", sets: "2–3", rest: "60s" },
       defaultSets: 3,
       note: "Arm comes out at a 30–45° angle to the body. Torso parallel to the ground.",
+      videoUrl: "https://www.youtube.com/watch?v=WTIbJn_8lVI&feature=youtu.be",
     },
     {
       key: "sf-c1-loaded-pec-stretch",
@@ -226,6 +230,7 @@ const shoulderProgram = {
       defaultSets: 3,
       measurement: { type: "text", label: "Depth" },
       note: "Thumb points down. Hand slightly above ear height.",
+      videoUrl: "https://www.youtube.com/watch?v=CIzKsfsjoyY&feature=youtu.be",
     },
     {
       key: "sf-c2-prone-db-powell-raise",
@@ -235,6 +240,7 @@ const shoulderProgram = {
       prescription: { reps: "5–8", tempo: "3112", sets: "2–3", rest: "60s" },
       defaultSets: 3,
       note: "Lay face down on a box or bench. Hand inline with your ear at the bottom.",
+      videoUrl: "https://www.youtube.com/watch?v=dCcEtA32-ko",
     },
     {
       key: "sf-d1-hanging-variation",
@@ -245,6 +251,7 @@ const shoulderProgram = {
       defaultSets: 2,
       measurement: { type: "text", label: "Depth" },
       note: "Use the Mobility & Flexibility Toolkit to find your hanging variation.",
+      // no video — hanging variation is user-specific
     },
   ],
 };
