@@ -5,6 +5,6 @@ export function renderMobility(container) {
   return renderProgramTab({
     tab: "mobility",
     container,
-    programs: MOBILITY.phases,
+    groups: MOBILITY.groups,
   });
 }

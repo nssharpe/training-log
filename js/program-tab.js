@@ -89,6 +89,7 @@ function renderExerciseCard(exercise, session, saveMeta) {
       ? el("a", { class: "video", href: exercise.videoUrl, target: "_blank", rel: "noopener" }, "▶ Watch video")
       : null,
     rxDl,
+    exercise.note ? el("div", { class: "ex-note" }, exercise.note) : null,
     exercise.verify ? el("div", { class: "verify-flag" }, "⚠ verify against PDF") : null,
   );
 
@@ -162,6 +163,7 @@ function renderGridRow(exercise, columns, editableMeta, onChange) {
     ),
     el("div", { class: "name" }, exercise.name),
     el("div", { class: "rx" }, formatPrescription(exercise.prescription)),
+    exercise.note ? el("div", { class: "ex-note" }, exercise.note) : null,
   );
 
   const cells = [ex];
@@ -235,12 +237,21 @@ function formatPrescription(p) {
 
 // ---------- public: render a "program tab" ----------
 export async function renderProgramTab(opts) {
-  const { tab, container, programs } = opts;
+  const { tab, container } = opts;
   container.innerHTML = "";
   const today = todayISO();
 
-  // selected program/day/date from URL hash (date defaults to today)
+  // selected group/program/day/date from URL hash (date defaults to today)
   const hashParams = new URLSearchParams(location.hash.split("?")[1] || "");
+  const groups = opts.groups || null;        // sub-tabs (e.g. Pike vs Shoulder)
+  let group = null, programs;
+  if (groups) {
+    group = groups.find((g) => g.id === hashParams.get("g")) || groups[0];
+    programs = group.programs;
+  } else {
+    programs = opts.programs;
+  }
+  const groupKey = group ? group.id : null;
   const program = programs.find((p) => p.id === hashParams.get("p")) || programs[0];
   const programKey = program.id;
   let day = parseInt(hashParams.get("d"), 10);
@@ -257,27 +268,41 @@ export async function renderProgramTab(opts) {
     if (last) day = (last.day % program.daysPerCycle) + 1;
   }
 
-  const hashFor = ({ p = programKey, d = day, date = selectedDate } = {}) => {
-    let h = `#${tab}?p=${p}`;
-    if (program.daysPerCycle) h += `&d=${d}`;
-    if (date && date !== today) h += `&date=${date}`;
-    return h;
+  const hashFor = ({ g = groupKey, p = programKey, d = day, date = selectedDate } = {}) => {
+    const parts = [];
+    if (groups) parts.push(`g=${g}`);
+    parts.push(`p=${p}`);
+    if (program.daysPerCycle) parts.push(`d=${d}`);
+    if (date && date !== today) parts.push(`date=${date}`);
+    return `#${tab}?` + parts.join("&");
   };
   const rerender = () => renderProgramTab(opts);
 
-  // ----- selector row -----
-  const programGroup = el("div", { class: "group" });
-  for (const p of programs) {
-    programGroup.append(el("button", {
-      class: "pill" + (p.id === programKey ? " active" : ""),
-      // omit day/date so the new program lands on its own "next day", today
-      onClick: () => { location.hash = `#${tab}?p=${p.id}`; },
-    }, p.name));
+  // ----- sub-tab row (program groups, e.g. Pike vs Shoulder) -----
+  if (groups) {
+    const subtabs = el("div", { class: "subtabs" });
+    for (const g of groups) {
+      subtabs.append(el("button", {
+        class: "subtab" + (g.id === groupKey ? " active" : ""),
+        onClick: () => { location.hash = `#${tab}?g=${g.id}`; }, // reset to that group's defaults
+      }, g.name));
+    }
+    container.append(subtabs);
   }
-  const selectors = el("div", { class: "selectors" },
-    el("span", { class: "label" }, tab === "mobility" ? "Phase" : "Split"),
-    programGroup,
-  );
+
+  // ----- selector row -----
+  const selectors = el("div", { class: "selectors" });
+  if (programs.length > 1) {
+    const programGroup = el("div", { class: "group" });
+    for (const p of programs) {
+      programGroup.append(el("button", {
+        class: "pill" + (p.id === programKey ? " active" : ""),
+        // omit day/date so the new program lands on its own "next day", today
+        onClick: () => { location.hash = groups ? `#${tab}?g=${groupKey}&p=${p.id}` : `#${tab}?p=${p.id}`; },
+      }, p.name));
+    }
+    selectors.append(el("span", { class: "label" }, tab === "mobility" ? "Phase" : "Split"), programGroup);
+  }
 
   if (program.daysPerCycle) {
     const daysWrap = el("div", { class: "day-switch" });

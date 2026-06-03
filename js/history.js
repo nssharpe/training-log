@@ -3,8 +3,12 @@ import { sessionsToCsv, downloadCsv } from "./csv.js";
 import { MOBILITY } from "../data/mobility-program.js";
 import { STRENGTH } from "../data/strength-program.js";
 
+// All mobility programs flattened, each tagged with its group for display.
+const mobilityPrograms = MOBILITY.groups.flatMap((g) =>
+  g.programs.map((p) => ({ ...p, groupName: g.name })));
+
 function programLookup(programKey, exerciseKey) {
-  for (const p of MOBILITY.phases) {
+  for (const p of mobilityPrograms) {
     if (p.id !== programKey) continue;
     return p.exercises.find((e) => e.key === exerciseKey);
   }
@@ -16,7 +20,12 @@ function programLookup(programKey, exerciseKey) {
 }
 
 function programName(tab, programKey) {
-  if (tab === "mobility") return MOBILITY.phases.find((p) => p.id === programKey)?.name || programKey;
+  if (tab === "mobility") {
+    const p = mobilityPrograms.find((p) => p.id === programKey);
+    if (!p) return programKey;
+    // disambiguate phases (e.g. "Pike & H2T · Phase 1"); single-program groups just show their name
+    return p.groupName && p.groupName !== p.name ? `${p.groupName} · ${p.name}` : p.name;
+  }
   if (tab === "strength") return STRENGTH.splits.find((s) => s.id === programKey)?.name || programKey;
   return programKey;
 }

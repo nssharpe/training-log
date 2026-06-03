@@ -28,7 +28,7 @@ js/
   csv.js                    flatten sessions → CSV rows
   timer.js                  rest countdown + metronome (Web Audio API, no audio files)
 data/
-  mobility-program.js       MFTK Pike & H2T: 3 phases × N exercises × 8 days/cycle
+  mobility-program.js       MOBILITY.groups[] sub-tabs: "Pike & H2T" (3 phases × 8 days/cycle) + "Shoulder Flexion" (single session-logged routine)
   strength-program.js       4 splits (Tue/Thu AM+PM, M/W/F AM+PM)
 mockups/                    Phase 1 layout mockups (A/B/C/D). D is the chosen one.
 ```
@@ -66,6 +66,11 @@ localStorage mirrors every write under key `tlog:{id}`. On load, the doc with hi
 - `todayISO()` in program-tab.js uses **local** calendar date (evening workouts log to today, not tomorrow-UTC).
 
 ## Program data structure
+
+`renderProgramTab` accepts either `programs` (flat — strength) or `groups` (sub-tabbed — mobility).
+A `group = { id, name, programs[] }` renders a sub-tab row; the active group's `programs` fill the phase/split pills (pills hidden when a group has only one program). Hash gains `g=<groupId>` for groups (e.g. `#mobility?g=shoulder`, `#mobility?g=pike&p=p2&d=3`). Legacy `#mobility?p=p1&d=3` (no `g`) still works — defaults to the first group.
+
+Exercises may carry an optional `note` (coaching cue) rendered under the prescription. A `repsWeightMeasurement` exercise with NO `measurement` field shows reps+weight only (used for the Shoulder dumbbell raises).
 
 Each exercise:
 ```js
