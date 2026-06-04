@@ -3,7 +3,7 @@
 const FIELDS = [
   "date", "tab", "programKey", "day",
   "exerciseOrder", "exerciseName",
-  "set", "reps", "weight", "measurement", "time", "checked", "notes",
+  "set", "weight", "reps", "measurement", "time", "checked", "notes",
 ];
 
 function csvEscape(v) {

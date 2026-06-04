@@ -96,7 +96,16 @@ Each exercise:
 `"setsRepsWeight"` = reps + weight per set (strength default).
 `"timeNotes"` = Time (s) number + Notes text per set, no weight (used for Shoulder D1 hanging). Per-set values stored as `set.time` / `set.notes`.
 
+**Weight is a text input** (not number) so values like "bw" / "red band" work; stored as a string. `sessionHasData()` treats `weight === ""` as empty (so a blank text weight doesn't count as logged data). Reps/time stay numeric.
+
 Renderers branch on `inputType` in THREE places — keep them in sync: `renderExerciseCard` (mobile), `renderGridRow` (desktop), and the `fillFromLast` field list (`["reps","weight","measurement","time","notes"]`). CSV `FIELDS` in `csv.js` must also include any new per-set field.
+
+## Mobile card layout (program-tab.js)
+
+- Card = `.ex-head` (prescription left, action buttons `.ex-controls` right-justified) + `.ex-body` (the sets).
+- Sets render **horizontally**: one `.set-col` per set (`Set 1 / Set 2 …`), each stacking its labelled fields (`field()` + `setCol()` helpers). Field order is **weight then reps** (then measurement) everywhere — mobile cards, desktop grid (`set-inputs` classes `wr`/`wrm`/`rm`), and CSV `FIELDS`. `"check"` exercises render as a horizontal `.checkbox-row`. The desktop grid still stacks sets vertically within each day-column.
+- **Hold timer:** `parseHoldSeconds(prescription.reps)` detects when reps *is* a time (`90s`, `20s`, `30–90s`, `90s per side` → upper bound, e.g. `30–90s` → 90; a rep count like `8`/`5–8` → null). When set, a "⏳ Timer Ns" button calls `startRest(n, "Hold")` (same overlay as Rest, title swapped). The overlay has −30s / +30s buttons to adjust the running time (−30s floors at 5s remaining) — that's how you shorten a ranged hold. Auto-detected — no data field needed.
+- **Supersets:** exercises whose `order` shares a leading letter (A1/A2 → "A") get a shared colored left border, only when 2+ share the letter. `computeSupersets()` assigns palette index per letter; `.ss .ss-0…ss-5` in CSS. Applied to mobile cards and desktop grid rows (`tr.ss td.ex`).
 
 **To add or rename an exercise, change `data/*.js` only.** Renderers are data-driven. If you rename a `key`, existing logged entries for that exercise will orphan — only do it during a deliberate migration.
 

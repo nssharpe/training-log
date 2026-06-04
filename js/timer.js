@@ -41,9 +41,11 @@ function tickRest() {
   if (left <= 0) stopRest(true);
 }
 
-export function startRest(seconds) {
+export function startRest(seconds, label = "Rest") {
   stopRest(false);
   restEndAt = Date.now() + seconds * 1000;
+  const title = overlay().querySelector(".overlay-title");
+  if (title) title.textContent = label;
   overlay().hidden = false;
   display().textContent = fmt(seconds * 1000);
   restInterval = setInterval(tickRest, 200);
@@ -100,6 +102,11 @@ export function wireOverlays() {
   document.getElementById("timer-stop").addEventListener("click", () => stopRest(false));
   document.getElementById("timer-add-30").addEventListener("click", () => {
     restEndAt += 30000;
+    tickRest();
+  });
+  document.getElementById("timer-sub-30").addEventListener("click", () => {
+    // never drop below ~5s remaining (so a manual decrement doesn't end the timer)
+    restEndAt = Math.max(Date.now() + 5000, restEndAt - 30000);
     tickRest();
   });
   document.getElementById("metro-toggle").addEventListener("click", () => {

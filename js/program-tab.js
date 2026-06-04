@@ -8,6 +8,42 @@
 import { loadSession, saveSession, listSessions } from "./store.js";
 import { startRest, parseRestSeconds, openMetronome } from "./timer.js";
 
+// Parse a "hold" prescription where the reps field IS a time (e.g. "90s", "20s",
+// "30–90s", "90s per side") → seconds (upper bound of a range). Returns null when
+// reps is an actual rep count ("8", "5–8") or a tempo-style value. Used to offer a
+// countdown "Timer" button on timed-hold exercises, mirroring the Rest timer.
+function parseHoldSeconds(reps) {
+  if (!reps) return null;
+  const m = String(reps).trim().match(/^(\d+)(?:\s*[–-]\s*(\d+))?\s*s\b/i);
+  return m ? parseInt(m[2] || m[1], 10) : null;
+}
+
+// Supersets: exercises whose `order` shares a leading letter (A1/A2 → "A") are one
+// superset. Only groups with 2+ members get a shared color (single exercises don't).
+const SUPERSET_COLORS = 6; // matches .ss-0 … .ss-5 in styles.css
+function supersetKey(order) {
+  const m = String(order || "").match(/^[A-Za-z]+/);
+  return m ? m[0].toUpperCase() : null;
+}
+function computeSupersets(exercises) {
+  const counts = new Map();
+  for (const ex of exercises) {
+    const k = supersetKey(ex.order);
+    if (k) counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  const colors = new Map();
+  let i = 0;
+  for (const ex of exercises) {
+    const k = supersetKey(ex.order);
+    if (k && counts.get(k) >= 2 && !colors.has(k)) colors.set(k, i++ % SUPERSET_COLORS);
+  }
+  return colors;
+}
+function ssClassFor(exercise, ssColors) {
+  const k = supersetKey(exercise.order);
+  return k && ssColors.has(k) ? ` ss ss-${ssColors.get(k)}` : "";
+}
+
 // Local calendar date (so an evening workout logs to "today", not tomorrow-UTC).
 const todayISO = () => {
   const d = new Date();
@@ -67,12 +103,22 @@ function ensureEntry(session, exKey, exercise) {
 function sessionHasData(s) {
   return Object.values(s?.entries || {}).some((e) =>
     (e.sets || []).some((set) =>
-      set.reps != null || set.weight != null ||
-      (set.measurement != null && set.measurement !== "") || set.checked));
+      set.reps != null ||
+      (set.weight != null && set.weight !== "") ||
+      (set.measurement != null && set.measurement !== "") ||
+      (set.time != null) || set.checked));
+}
+
+// little form helpers for the horizontal mobile set layout
+function field(label, input) {
+  return el("label", { class: "f" }, el("span", { class: "fl" }, label), input);
+}
+function setCol(n, fields) {
+  return el("div", { class: "set-col" }, el("div", { class: "set-col-num" }, `Set ${n}`), ...fields);
 }
 
 // ---------- exercise card (mobile) ----------
-function renderExerciseCard(exercise, session, saveMeta) {
+function renderExerciseCard(exercise, session, saveMeta, ssClass = "") {
   const entry = ensureEntry(session, exercise.key, exercise);
   const triggerSave = () => saveSession(saveMeta, { entries: session.entries });
 
@@ -82,35 +128,40 @@ function renderExerciseCard(exercise, session, saveMeta) {
     if (v && v !== "—") rxDl.append(el("dt", {}, label), el("dd", {}, v));
   }
 
-  const rxCol = el("div", { class: "rx-col" },
-    el("div", { class: "order" }, exercise.order),
-    el("div", { class: "name" }, exercise.name),
-    exercise.videoUrl
-      ? el("a", { class: "video", href: exercise.videoUrl, target: "_blank", rel: "noopener" }, "▶ Watch video")
-      : null,
-    rxDl,
-    exercise.note ? el("div", { class: "ex-note" }, exercise.note) : null,
-    exercise.verify ? el("div", { class: "verify-flag" }, "⚠ verify against PDF") : null,
+  // controls live in the card header, right-justified opposite the prescription
+  const restSec = parseRestSeconds(exercise.prescription.rest);
+  const holdSec = parseHoldSeconds(exercise.prescription.reps);
+  const controls = el("div", { class: "ex-controls" },
+    el("button", { onClick: () => startRest(restSec || 60, "Rest") }, `⏱ Rest ${restSec || 60}s`),
+    holdSec ? el("button", { onClick: () => startRest(holdSec, "Hold") }, `⏳ Timer ${holdSec}s`) : null,
+    el("button", { onClick: openMetronome }, "♩ Metronome"),
   );
 
-  const restSec = parseRestSeconds(exercise.prescription.rest);
-  const controls = el("div", { class: "controls" },
-    el("button", { onClick: () => startRest(restSec || 60) }, `⏱ Rest ${restSec || 60}s`),
-    el("button", { onClick: openMetronome }, "♩ Metronome"),
+  const head = el("div", { class: "ex-head" },
+    el("div", { class: "ex-head-info" },
+      el("div", { class: "order" }, exercise.order),
+      el("div", { class: "name" }, exercise.name),
+      exercise.videoUrl
+        ? el("a", { class: "video", href: exercise.videoUrl, target: "_blank", rel: "noopener" }, "▶ Watch video")
+        : null,
+      rxDl,
+      exercise.note ? el("div", { class: "ex-note" }, exercise.note) : null,
+      exercise.verify ? el("div", { class: "verify-flag" }, "⚠ verify against PDF") : null,
+    ),
+    controls,
   );
 
   let body;
   if (exercise.inputType === "check") {
-    body = el("div", { class: "checkbox-block" });
+    body = el("div", { class: "checkbox-row" });
     for (let i = 0; i < exercise.defaultSets; i++) {
       const cb = el("input", { type: "checkbox" });
       setVal(cb, entry.sets[i]?.checked);
       bindAutoSave(cb, () => { entry.sets[i] = { checked: cb.checked }; triggerSave(); });
-      body.append(el("label", {}, cb, ` Set ${i + 1}`));
+      body.append(el("label", {}, cb, ` ${i + 1}`));
     }
   } else if (exercise.inputType === "timeNotes") {
-    const headRow = el("tr", {}, el("th", {}, "#"), el("th", {}, "Time (s)"), el("th", {}, "Notes"));
-    const tbody = el("tbody");
+    body = el("div", { class: "set-row" });
     for (let i = 0; i < exercise.defaultSets; i++) {
       const tIn = el("input", { type: "number", placeholder: "s" });
       const nIn = el("input", { type: "text", placeholder: "notes" });
@@ -119,22 +170,15 @@ function renderExerciseCard(exercise, session, saveMeta) {
       const onChg = () => { entry.sets[i] = { time: getVal(tIn), notes: getVal(nIn) }; triggerSave(); };
       bindAutoSave(tIn, onChg);
       bindAutoSave(nIn, onChg);
-      tbody.append(el("tr", {}, el("td", {}, String(i + 1)), el("td", {}, tIn), el("td", {}, nIn)));
+      body.append(setCol(i + 1, [field("Time", tIn), field("Notes", nIn)]));
     }
-    body = el("table", { class: "sets" }, el("thead", {}, headRow), tbody);
   } else {
     const hasWeight = hasWeightInput(exercise);
     const hasMeasurement = exercise.measurement != null;
-    const headRow = el("tr", {},
-      el("th", {}, "#"),
-      el("th", {}, "Reps"),
-      hasWeight ? el("th", {}, "Weight") : null,
-      hasMeasurement ? el("th", {}, exercise.measurement.label) : null,
-    );
-    const tbody = el("tbody");
+    body = el("div", { class: "set-row" });
     for (let i = 0; i < exercise.defaultSets; i++) {
       const repsIn = el("input", { type: "number", placeholder: exercise.prescription.reps?.replace(/[^\d]/g, "") || "" });
-      const wIn = hasWeight ? el("input", { type: "number", placeholder: "lb" }) : null;
+      const wIn = hasWeight ? el("input", { type: "text", placeholder: "lb" }) : null;
       const mIn = hasMeasurement
         ? el("input", { type: exercise.measurement.type === "number" ? "number" : "text", placeholder: exercise.measurement.label.toLowerCase() })
         : null;
@@ -152,23 +196,21 @@ function renderExerciseCard(exercise, session, saveMeta) {
       bindAutoSave(repsIn, onChg);
       if (wIn) bindAutoSave(wIn, onChg);
       if (mIn) bindAutoSave(mIn, onChg);
-      tbody.append(el("tr", {},
-        el("td", {}, String(i + 1)),
-        el("td", {}, repsIn),
-        hasWeight ? el("td", {}, wIn) : null,
-        hasMeasurement ? el("td", {}, mIn) : null,
-      ));
+      const fields = [];
+      if (wIn) fields.push(field("W", wIn));
+      fields.push(field("R", repsIn));
+      if (mIn) fields.push(field(exercise.measurement.label, mIn));
+      body.append(setCol(i + 1, fields));
     }
-    body = el("table", { class: "sets" }, el("thead", {}, headRow), tbody);
   }
 
-  return el("section", { class: "exercise" }, rxCol, el("div", { class: "input-col" }, controls, body));
+  return el("section", { class: "exercise" + ssClass }, head, el("div", { class: "ex-body" }, body));
 }
 
 // ---------- desktop grid ----------
 // columns: [{ label, editable, session, navHash }]. Only the editable column writes,
 // using editableMeta; the rest are read-only and (if navHash) clickable in the header.
-function renderGridRow(exercise, columns, editableMeta, onChange) {
+function renderGridRow(exercise, columns, editableMeta, onChange, ssClass = "") {
   const ex = el("td", { class: "ex" },
     el("div", { class: "order" },
       exercise.order,
@@ -225,10 +267,10 @@ function renderGridRow(exercise, columns, editableMeta, onChange) {
     } else {
       const hasWeight = hasWeightInput(exercise);
       const hasMeasurement = exercise.measurement != null;
-      const inputClass = `set-inputs ${hasWeight && hasMeasurement ? "rwm" : hasWeight ? "rw" : "rm"}`;
+      const inputClass = `set-inputs ${hasWeight && hasMeasurement ? "wrm" : hasWeight ? "wr" : "rm"}`;
       for (let i = 0; i < exercise.defaultSets; i++) {
         const repsIn = el("input", { type: "number", placeholder: "r", readonly: isEd ? null : true });
-        const wIn = hasWeight ? el("input", { type: "number", placeholder: "lb", readonly: isEd ? null : true }) : null;
+        const wIn = hasWeight ? el("input", { type: "text", placeholder: "lb", readonly: isEd ? null : true }) : null;
         const mIn = hasMeasurement
           ? el("input", { type: exercise.measurement.type === "number" ? "number" : "text", placeholder: hasWeight ? "depth" : "m", readonly: isEd ? null : true })
           : null;
@@ -251,12 +293,12 @@ function renderGridRow(exercise, columns, editableMeta, onChange) {
         }
         cell.append(el("div", { class: "set-cell" },
           el("span", { class: "set-label" }, String(i + 1)),
-          el("span", { class: inputClass }, repsIn, wIn, mIn)));
+          el("span", { class: inputClass }, wIn, repsIn, mIn)));
       }
     }
     cells.push(cell);
   }
-  return el("tr", {}, ...cells);
+  return el("tr", { class: ssClass.trim() || null }, ...cells);
 }
 
 function formatPrescription(p) {
@@ -376,9 +418,12 @@ export async function renderProgramTab(opts) {
   const meta = { tab, programKey, day: program.daysPerCycle ? day : undefined, date: selectedDate };
   const session = (await loadSession(meta)) || { ...meta, entries: {} };
 
+  // superset coloring (shared across mobile cards + desktop rows)
+  const ssColors = computeSupersets(program.exercises);
+
   // mobile view (cards) — same session object as the desktop editable column
   const mobile = el("div", { class: "mobile-view" });
-  for (const ex of program.exercises) mobile.append(renderExerciseCard(ex, session, meta));
+  for (const ex of program.exercises) mobile.append(renderExerciseCard(ex, session, meta, ssClassFor(ex, ssColors)));
 
   // desktop view (grid)
   const desktop = el("div", { class: "desktop-view" });
@@ -465,8 +510,9 @@ async function renderDesktopGrid({ tab, program, day, today, selectedDate, sessi
     headTr.append(th);
   }
 
+  const ssColors = computeSupersets(program.exercises);
   const tbody = el("tbody");
-  for (const ex of program.exercises) tbody.append(renderGridRow(ex, columns, meta));
+  for (const ex of program.exercises) tbody.append(renderGridRow(ex, columns, meta, null, ssClassFor(ex, ssColors)));
 
   mount.append(
     el("div", { class: "grid-wrap" }, el("table", { class: "grid" }, el("thead", {}, headTr), tbody)),
