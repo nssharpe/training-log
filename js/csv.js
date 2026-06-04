@@ -3,7 +3,7 @@
 const FIELDS = [
   "date", "tab", "programKey", "day",
   "exerciseOrder", "exerciseName",
-  "set", "reps", "weight", "measurement", "checked", "notes",
+  "set", "reps", "weight", "measurement", "time", "checked", "notes",
 ];
 
 function csvEscape(v) {
@@ -24,7 +24,7 @@ export function sessionsToCsv(sessions, programLookup) {
         rows.push(FIELDS.map((f) => csvEscape({
           date: s.date, tab: s.tab, programKey: s.programKey, day: s.day,
           exerciseOrder: ex.order, exerciseName: ex.name,
-          set: 1, reps: null, weight: null, measurement: null, checked: null,
+          set: 1, reps: null, weight: null, measurement: null, time: null, checked: null,
           notes: entry.notes,
         }[f])).join(","));
       }
@@ -33,8 +33,9 @@ export function sessionsToCsv(sessions, programLookup) {
           date: s.date, tab: s.tab, programKey: s.programKey, day: s.day,
           exerciseOrder: ex.order, exerciseName: ex.name,
           set: i + 1,
-          reps: set.reps, weight: set.weight, measurement: set.measurement, checked: set.checked,
-          notes: i === 0 ? entry.notes : null,
+          reps: set.reps, weight: set.weight, measurement: set.measurement,
+          time: set.time, checked: set.checked,
+          notes: i === 0 ? entry.notes : set.notes ?? null,
         }[f])).join(","));
       });
     }

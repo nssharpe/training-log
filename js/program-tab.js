@@ -108,6 +108,20 @@ function renderExerciseCard(exercise, session, saveMeta) {
       bindAutoSave(cb, () => { entry.sets[i] = { checked: cb.checked }; triggerSave(); });
       body.append(el("label", {}, cb, ` Set ${i + 1}`));
     }
+  } else if (exercise.inputType === "timeNotes") {
+    const headRow = el("tr", {}, el("th", {}, "#"), el("th", {}, "Time (s)"), el("th", {}, "Notes"));
+    const tbody = el("tbody");
+    for (let i = 0; i < exercise.defaultSets; i++) {
+      const tIn = el("input", { type: "number", placeholder: "s" });
+      const nIn = el("input", { type: "text", placeholder: "notes" });
+      setVal(tIn, entry.sets[i]?.time);
+      setVal(nIn, entry.sets[i]?.notes);
+      const onChg = () => { entry.sets[i] = { time: getVal(tIn), notes: getVal(nIn) }; triggerSave(); };
+      bindAutoSave(tIn, onChg);
+      bindAutoSave(nIn, onChg);
+      tbody.append(el("tr", {}, el("td", {}, String(i + 1)), el("td", {}, tIn), el("td", {}, nIn)));
+    }
+    body = el("table", { class: "sets" }, el("thead", {}, headRow), tbody);
   } else {
     const hasWeight = hasWeightInput(exercise);
     const hasMeasurement = exercise.measurement != null;
@@ -189,6 +203,25 @@ function renderGridRow(exercise, columns, editableMeta, onChange) {
         }
       }
       cell.append(wrap);
+    } else if (exercise.inputType === "timeNotes") {
+      for (let i = 0; i < exercise.defaultSets; i++) {
+        const tIn = el("input", { type: "number", placeholder: "s", readonly: isEd ? null : true });
+        const nIn = el("input", { type: "text", placeholder: "notes", readonly: isEd ? null : true });
+        setVal(tIn, entry.sets[i]?.time);
+        setVal(nIn, entry.sets[i]?.notes);
+        if (isEd) {
+          const onChg = () => {
+            entry.sets[i] = { time: getVal(tIn), notes: getVal(nIn) };
+            saveSession(editableMeta, { entries: col.session.entries });
+            onChange?.();
+          };
+          bindAutoSave(tIn, onChg);
+          bindAutoSave(nIn, onChg);
+        }
+        cell.append(el("div", { class: "set-cell" },
+          el("span", { class: "set-label" }, String(i + 1)),
+          el("span", { class: "set-inputs rw" }, tIn, nIn)));
+      }
     } else {
       const hasWeight = hasWeightInput(exercise);
       const hasMeasurement = exercise.measurement != null;
@@ -372,7 +405,7 @@ export async function renderProgramTab(opts) {
         const ss = src.sets?.[i];
         if (!ss) continue;
         const cs = cur.sets[i] || (cur.sets[i] = {});
-        for (const f of ["reps", "weight", "measurement"]) {
+        for (const f of ["reps", "weight", "measurement", "time", "notes"]) {
           const empty = cs[f] == null || cs[f] === "";
           if (empty && ss[f] != null && ss[f] !== "") { cs[f] = ss[f]; filled++; }
         }
