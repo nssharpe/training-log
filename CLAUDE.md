@@ -24,7 +24,7 @@ js/
   program-tab.js            shared renderer for mobility + strength. Mobile cards + desktop grid.
   mobility.js               thin: passes MOBILITY data to renderProgramTab
   strength.js               thin: passes STRENGTH data to renderProgramTab
-  history.js                history list + CSV export buttons
+  history.js                history list (rows clickable → edit; hover shows Delete + edit hint) + CSV export buttons
   csv.js                    flatten sessions → CSV rows
   timer.js                  rest countdown + metronome (Web Audio API, no audio files)
 data/
@@ -41,13 +41,17 @@ Doc shape:
 ```js
 {
   tab: "mobility" | "strength",
-  programKey: "p1" | "p2" | "p3" | "tt-am" | "tt-pm" | "mwf-am" | "mwf-pm",
-  day: 1..8,             // mobility only
+  programKey: "p1" | "p2" | "p3" | "sf" | "tt-am" | "tt-pm" | "mwf-am" | "mwf-pm",
+  day: 1..8,             // Pike phases only; absent for "sf" (shoulder) and all strength
   date: "YYYY-MM-DD",
   entries: {
     [exerciseKey]: {
-      sets: [{ reps, weight, measurement, checked }, ...],
-      notes: ""
+      // set fields depend on the exercise inputType:
+      //   reps, weight, measurement  (repsWeightMeasurement)
+      //   checked                    (check)
+      //   time, notes                (timeNotes — per-set notes, distinct from entry.notes)
+      sets: [{ reps, weight, measurement, checked, time, notes }, ...],
+      notes: ""   // entry-level note (currently unused by UI)
     }
   },
   updatedAt: <ms>
@@ -78,17 +82,21 @@ Each exercise:
   key: "unique-stable-id",      // never rename — used as session entry key
   order: "A1",                  // display label
   name: "Pike Block Crush — Standing",
-  inputType: "check" | "repsWeightMeasurement" | "setsRepsWeight",
+  inputType: "check" | "repsWeightMeasurement" | "setsRepsWeight" | "timeNotes",
   prescription: { reps, tempo, sets, rest },
   defaultSets: 3,
   measurement: { type: "text" | "number", label } | undefined,
-  videoUrl: "https://link.matthewismith.com/..." | undefined,
+  note: "coaching cue shown under the prescription" | undefined,
+  videoUrl: "https://... (YouTube or link.matthewismith.com)" | undefined,
 }
 ```
 
 `"check"` = N checkboxes (one per set), no numeric input.
-`"repsWeightMeasurement"` = reps + weight + measurement per set (mobility).
+`"repsWeightMeasurement"` = reps + weight per set; adds a measurement column only if `measurement` is set.
 `"setsRepsWeight"` = reps + weight per set (strength default).
+`"timeNotes"` = Time (s) number + Notes text per set, no weight (used for Shoulder D1 hanging). Per-set values stored as `set.time` / `set.notes`.
+
+Renderers branch on `inputType` in THREE places — keep them in sync: `renderExerciseCard` (mobile), `renderGridRow` (desktop), and the `fillFromLast` field list (`["reps","weight","measurement","time","notes"]`). CSV `FIELDS` in `csv.js` must also include any new per-set field.
 
 **To add or rename an exercise, change `data/*.js` only.** Renderers are data-driven. If you rename a `key`, existing logged entries for that exercise will orphan — only do it during a deliberate migration.
 
@@ -107,6 +115,15 @@ Each exercise:
 - Header indicator: empty → "saving…" → "saved ✓". `"local ✓"` shown when Firebase isn't configured.
 - On a failed cloud write/delete the indicator shows `"offline · local only"` and a **Reconnect** button appears (`#reconnect-btn`). Failed ids are queued in `failedWrites`/`failedDeletes`; `reconnect()` (in store.js) re-attempts them (reading latest from localStorage), re-inits Firebase if needed, and runs a connectivity probe when the queue is empty. Success → "reconnected ✓ · N uploads"; failure → "couldn't connect" then reverts to offline. **Data is never lost on failure** — it's always in localStorage.
 - Firestore reserves doc ids matching `__...__`; the connectivity probe uses `"connectivity-probe"` (no double underscores) to avoid an `invalid-argument` error.
+
+## Deleting sessions
+
+- History rows have a **Delete** button (hover-revealed, left of the edit hint). Calls `deleteSession(docId)` in store.js → removes from localStorage + Firestore, then re-renders the list. A failed Firestore delete queues in `failedDeletes` for the Reconnect flow.
+
+## Local preview (testing changes)
+
+- No build step, but ES modules need a server (not file://). The Claude Code preview tool reads `.claude/launch.json` at the **workspace root** (the parent "Mobility and Flexibility Toolkit" folder), not the repo root. There's also a committed `Nate Training App/.claude/launch.json` for the repo.
+- Python `http.server` sends no cache headers, so the browser serves **stale ES modules** across reloads. To test a JS change, bump the port (fresh origin) rather than reloading. The live config is real Firebase, so preview writes hit the real DB — clean up test sessions via the History delete button afterward.
 
 ## Common tweak recipes
 
