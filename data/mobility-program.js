@@ -36,7 +36,6 @@ const pikePhases = [
         inputType: "repsWeightMeasurement",
         prescription: { reps: "90s", tempo: "—", sets: "2–3", rest: "as needed" },
         defaultSets: 3,
-        measurement: { type: "text", label: "Depth" },
         videoUrl: "https://link.matthewismith.com/calfstretch-standing",
       },
       {
@@ -81,7 +80,6 @@ const pikePhases = [
         inputType: "repsWeightMeasurement",
         prescription: { reps: "90s", tempo: "—", sets: "2–3", rest: "as needed" },
         defaultSets: 3,
-        measurement: { type: "text", label: "Depth" },
         videoUrl: "https://link.matthewismith.com/calfstretch-donkey",
       },
       {
@@ -135,7 +133,6 @@ const pikePhases = [
         inputType: "repsWeightMeasurement",
         prescription: { reps: "8", tempo: "3s", sets: "2–3", rest: "60s+" },
         defaultSets: 3,
-        measurement: { type: "text", label: "Depth" },
         videoUrl: "https://link.matthewismith.com/calfstretch-knee-extension",
       },
       {
