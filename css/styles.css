@@ -219,6 +219,7 @@ table.grid .set-inputs.wrm { grid-template-columns: 1fr 1fr 1.4fr; }
 table.grid .set-inputs.wr  { grid-template-columns: 1fr 1fr; }
 table.grid .set-inputs.rw  { grid-template-columns: 1fr 1fr; }
 table.grid .set-inputs.rm  { grid-template-columns: 1fr 1.4fr; }
+table.grid .set-inputs.w   { grid-template-columns: 1fr; }
 table.grid .check-cell { display: flex; flex-direction: column; gap: 4px; }
 table.grid .check-cell label { display: flex; align-items: center; gap: 4px; font-size: 12px; }
 table.grid input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--ok); }

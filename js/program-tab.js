@@ -172,6 +172,15 @@ function renderExerciseCard(exercise, session, saveMeta, ssClass = "") {
       bindAutoSave(nIn, onChg);
       body.append(setCol(i + 1, [field("Time", tIn), field("Notes", nIn)]));
     }
+  } else if (exercise.inputType === "weightOnly") {
+    body = el("div", { class: "set-row" });
+    for (let i = 0; i < exercise.defaultSets; i++) {
+      const wIn = el("input", { type: "text", placeholder: "lb" });
+      setVal(wIn, entry.sets[i]?.weight);
+      const onChg = () => { entry.sets[i] = { weight: getVal(wIn) }; triggerSave(); };
+      bindAutoSave(wIn, onChg);
+      body.append(setCol(i + 1, [field("W", wIn)]));
+    }
   } else {
     const hasWeight = hasWeightInput(exercise);
     const hasMeasurement = exercise.measurement != null;
@@ -263,6 +272,22 @@ function renderGridRow(exercise, columns, editableMeta, onChange, ssClass = "") 
         cell.append(el("div", { class: "set-cell" },
           el("span", { class: "set-label" }, String(i + 1)),
           el("span", { class: "set-inputs rw" }, tIn, nIn)));
+      }
+    } else if (exercise.inputType === "weightOnly") {
+      for (let i = 0; i < exercise.defaultSets; i++) {
+        const wIn = el("input", { type: "text", placeholder: "lb", readonly: isEd ? null : true });
+        setVal(wIn, entry.sets[i]?.weight);
+        if (isEd) {
+          const onChg = () => {
+            entry.sets[i] = { weight: getVal(wIn) };
+            saveSession(editableMeta, { entries: col.session.entries });
+            onChange?.();
+          };
+          bindAutoSave(wIn, onChg);
+        }
+        cell.append(el("div", { class: "set-cell" },
+          el("span", { class: "set-label" }, String(i + 1)),
+          el("span", { class: "set-inputs w" }, wIn)));
       }
     } else {
       const hasWeight = hasWeightInput(exercise);
