@@ -5,7 +5,7 @@
 // for the selected (day,) date; on desktop a wide grid where the selected column is
 // editable and the rest are read-only history you can click to jump to.
 
-import { loadSession, saveSession, listSessions } from "./store.js";
+import { loadSession, saveSession, listSessions, docId } from "./store.js";
 import { startRest, parseRestSeconds, openMetronome } from "./timer.js";
 
 // Parse a "hold" prescription where the reps field IS a time (e.g. "90s", "20s",
@@ -359,6 +359,16 @@ export async function renderProgramTab(opts) {
   let selectedDate = hashParams.get("date");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate || "")) selectedDate = today;
   const isToday = selectedDate === today;
+  const meta = { tab, programKey, day: program.daysPerCycle ? day : undefined, date: selectedDate };
+
+  // "Performed N× before" — only meaningful for single-session-per-date programs
+  // (no day-of-cycle rotation, e.g. Shoulder Flexion, the strength splits).
+  let performedCount = null;
+  if (!program.daysPerCycle) {
+    const priorSessions = await listSessions({ tab, programKey });
+    const curId = docId(meta);
+    performedCount = priorSessions.filter((s) => sessionHasData(s) && docId(s) !== curId).length;
+  }
 
   // When no day is explicitly chosen, resume at the day AFTER the most recently
   // logged one (wrapping 8 -> 1), so landing on the tab lands on "what's next".
@@ -426,6 +436,10 @@ export async function renderProgramTab(opts) {
   }
   selectors.append(dateGroup);
 
+  if (performedCount != null) {
+    selectors.append(el("span", { class: "workout-count" }, `Performed ${performedCount}× before`));
+  }
+
   // fill-from-last-workout
   selectors.append(el("button", {
     class: "btn-sm fill-btn",
@@ -440,7 +454,6 @@ export async function renderProgramTab(opts) {
   container.append(selectors);
 
   // ----- load the editable session for (programKey, day?, selectedDate) -----
-  const meta = { tab, programKey, day: program.daysPerCycle ? day : undefined, date: selectedDate };
   const session = (await loadSession(meta)) || { ...meta, entries: {} };
 
   // superset coloring (shared across mobile cards + desktop rows)

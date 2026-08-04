@@ -102,6 +102,7 @@ button { font: inherit; color: inherit; }
 .fill-btn { border-color: var(--accent); color: var(--accent); }
 .fill-btn:hover { background: var(--accent); color: #1a1500; }
 .editing-flag { color: var(--accent); font-size: 13px; font-weight: 600; }
+.workout-count { color: var(--muted); font-size: 13px; }
 
 /* ===== mobile view (exercise cards) ===== */
 .mobile-view { display: block; }
