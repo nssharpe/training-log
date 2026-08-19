@@ -344,15 +344,20 @@ export async function renderProgramTab(opts) {
   // selected group/program/day/date from URL hash (date defaults to today)
   const hashParams = new URLSearchParams(location.hash.split("?")[1] || "");
   const groups = opts.groups || null;        // sub-tabs (e.g. Pike vs Shoulder)
-  let group = null, programs;
+  let group = null, programs, defaultProgramId = opts.defaultProgramId || null;
   if (groups) {
     group = groups.find((g) => g.id === hashParams.get("g")) || groups[0];
     programs = group.programs;
+    defaultProgramId = group.defaultProgramId || null;
   } else {
     programs = opts.programs;
   }
   const groupKey = group ? group.id : null;
-  const program = programs.find((p) => p.id === hashParams.get("p")) || programs[0];
+  // no `p=` in the hash -> the group's declared default (the phase you're currently
+  // on), falling back to the first program. Pill order stays the data's order.
+  const program = programs.find((p) => p.id === hashParams.get("p"))
+    || programs.find((p) => p.id === defaultProgramId)
+    || programs[0];
   const programKey = program.id;
   let day = parseInt(hashParams.get("d"), 10);
   if (!Number.isFinite(day)) day = 1;

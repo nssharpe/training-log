@@ -1,7 +1,9 @@
 // MFTK mobility programs, grouped into sub-tabs within the Mobility tab.
 //
 // Structure:
-//   MOBILITY.groups[] = { id, name, programs[] }
+//   MOBILITY.groups[] = { id, name, defaultProgramId?, programs[] }
+//     defaultProgramId -> which program is selected when the hash has no `p=`
+//                         (pill order stays 1,2,3 — only the default moves)
 //     program = { id, name, daysPerCycle?, exercises[] }
 //       - daysPerCycle set  -> 8-day rotating cycle (Pike phases), day switcher + day grid
 //       - daysPerCycle unset -> single routine logged per session/date (Shoulder), like a strength split
@@ -166,12 +168,13 @@ const pikePhases = [
   },
 ];
 
-// MFTK Shoulder Training Program — from "MFTK Shoulder Flexion 1-22--.pdf".
+// MFTK Shoulder Training Program — phase 1 from "MFTK Shoulder Flexion 1-22--.pdf".
 // 1–2×/week, ~60 min. One routine logged per session (no day-of-cycle rotation).
 // Source PDF has no exercise video links (play icons are decorative).
-const shoulderProgram = {
+// `id` stays "sf" — renaming it would orphan every logged shoulder session.
+const shoulderPhase1 = {
   id: "sf",
-  name: "Shoulder Flexion",
+  name: "Phase 1",
   // no daysPerCycle -> logged per session/date, like a strength split
   exercises: [
     {
@@ -247,9 +250,88 @@ const shoulderProgram = {
   ],
 };
 
+// Shoulder phase 2. Same shape as phase 1: one routine logged per session/date.
+// Video links point at the MFTK toolkit posts (login required).
+const shoulderPhase2 = {
+  id: "sf2",
+  name: "Phase 2",
+  exercises: [
+    {
+      key: "sf2-a1-stick-ext-rotation",
+      order: "A1",
+      name: "Stick External Rotation",
+      inputType: "check",
+      prescription: { reps: "3", tempo: "10s hold", sets: "2–3", rest: "15s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2157012558/posts/2184901964",
+    },
+    {
+      key: "sf2-a2-elbow-on-knee-ext-rotation",
+      order: "A2",
+      name: "Elbow on Knee External Rotation",
+      inputType: "repsWeightMeasurement",
+      prescription: { reps: "5–8", tempo: "3120", sets: "2–3", rest: "60s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975227/posts/9913564",
+    },
+    {
+      key: "sf2-b1-lat-stretch-lying",
+      order: "B1",
+      name: "Lat Stretch — Lying",
+      inputType: "check",
+      prescription: { reps: "3", tempo: "10s hold", sets: "2–3", rest: "15s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975118/posts/9913624",
+    },
+    {
+      key: "sf2-b2-trap-3-raise",
+      order: "B2",
+      name: "Trap 3 Raise",
+      inputType: "repsWeightMeasurement",
+      prescription: { reps: "5–8", tempo: "3102", sets: "2–3", rest: "60s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975227/posts/12612204",
+    },
+    {
+      key: "sf2-c1-wall-pec-stretch",
+      order: "C1",
+      name: "Wall Pec Stretch",
+      inputType: "check",
+      prescription: { reps: "3", tempo: "10s hold", sets: "2–3", rest: "15s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975118/posts/9913619",
+    },
+    {
+      key: "sf2-c2-powell-raise",
+      order: "C2",
+      name: "Powell Raise",
+      inputType: "repsWeightMeasurement",
+      prescription: { reps: "5–8", tempo: "3120", sets: "2–3", rest: "60s+" },
+      defaultSets: 3,
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975227/posts/9913962",
+    },
+    {
+      key: "sf2-d1-hanging-variation",
+      order: "D1",
+      name: "Your Hanging Variation",
+      inputType: "timeNotes",
+      // Source table leaves this row's numbers blank — carried over from phase 1.
+      prescription: { reps: "30–90s", tempo: "—", sets: "2", rest: "120s" },
+      defaultSets: 2,
+      note: "Choose a harder progression than phase 1.",
+      videoUrl: "https://www.matthewismith.com/products/mobility-flexibility-toolkit/categories/2975128/posts/9913577",
+    },
+  ],
+};
+
 export const MOBILITY = {
   groups: [
-    { id: "pike", name: "Pike & H2T", programs: pikePhases },
-    { id: "shoulder", name: "Shoulder Flexion", programs: [shoulderProgram] },
+    { id: "pike", name: "Pike & H2T", defaultProgramId: "p3", programs: pikePhases },
+    {
+      id: "shoulder",
+      name: "Shoulder Flexion",
+      defaultProgramId: "sf2",
+      programs: [shoulderPhase1, shoulderPhase2],
+    },
   ],
 };

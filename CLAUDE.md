@@ -28,7 +28,7 @@ js/
   csv.js                    flatten sessions → CSV rows
   timer.js                  rest countdown + metronome (Web Audio API, no audio files)
 data/
-  mobility-program.js       MOBILITY.groups[] sub-tabs: "Pike & H2T" (3 phases × 8 days/cycle) + "Shoulder Flexion" (single session-logged routine)
+  mobility-program.js       MOBILITY.groups[] sub-tabs: "Pike & H2T" (3 phases × 8 days/cycle) + "Shoulder Flexion" (2 phases, session-logged)
   strength-program.js       4 splits (Tue/Thu AM+PM, M/W/F AM+PM)
 mockups/                    Phase 1 layout mockups (A/B/C/D). D is the chosen one.
 ```
@@ -72,7 +72,7 @@ localStorage mirrors every write under key `tlog:{id}`. On load, the doc with hi
 ## Program data structure
 
 `renderProgramTab` accepts either `programs` (flat — strength) or `groups` (sub-tabbed — mobility).
-A `group = { id, name, programs[] }` renders a sub-tab row; the active group's `programs` fill the phase/split pills (pills hidden when a group has only one program). Hash gains `g=<groupId>` for groups (e.g. `#mobility?g=shoulder`, `#mobility?g=pike&p=p2&d=3`). Legacy `#mobility?p=p1&d=3` (no `g`) still works — defaults to the first group.
+A `group = { id, name, defaultProgramId?, programs[] }` renders a sub-tab row; the active group's `programs` fill the phase/split pills (pills hidden when a group has only one program). `defaultProgramId` picks which program is active when the hash has no `p=` (currently `p3` for Pike, `sf2` for Shoulder — the phases Nate is on); pill order stays the array order, so bump this instead of reordering phases. Hash gains `g=<groupId>` for groups (e.g. `#mobility?g=shoulder`, `#mobility?g=pike&p=p2&d=3`). Legacy `#mobility?p=p1&d=3` (no `g`) still works — defaults to the first group.
 
 Exercises may carry an optional `note` (coaching cue) rendered under the prescription. A `repsWeightMeasurement` exercise with NO `measurement` field shows reps+weight only (used for the Shoulder dumbbell raises).
 
